@@ -65,6 +65,77 @@ gameplay and touch behavior still need user sideload testing; compilation and
 synthetic regression checks do not establish those results. No device was signed
 or installed. The former source-publication blockers are resolved in the [audit](public-audit.md).
 
+## Independent rebuild from a clean tree (2026-10-31)
+
+A separate directory held a fresh copy of this tree, a new virtual environment
+and the game inputs, and nothing else. Both wrappers ran end to end from it and
+the results were compared with the artifacts this tree had already produced.
+
+| Element | Method |
+| --- | --- |
+| Source | `git clone` of `2537149` into an external directory, 34 MB, no untracked file |
+| Python | new venv on 3.9.6 with `scripts/requirements-fifa23.txt` (capstone 5.0.7, lz4 4.4.5, pycryptodome 4.1.0) plus fonttools 4.60.2 |
+| Tools | Xcode 27.1 with Metal 32023.921, .NET 10 (SDK 10.0.402), SPIRV-Cross at lock `8caa75a31452ae23`, XcodeGen |
+| Game inputs | the user's XCI, 1.0.3 update NSP and `prod.keys`, read-only |
+| Not used | this tree's `build/` and `Release/`, the earlier App/IPA, any earlier Shader cache (`DMSH_CAS`, `DMSH_PREFILL` and `IOSOUT` unset), another line's workspace, symlinks |
+
+Each run extracted the ExeFS, rewrote `main` and `sdk`, prepared the EASF package
+with the key discovered in `main` (no key file), translated and compiled all 386
+programs for both platforms, wrote the runtime tables, built the host with the
+repository's own libvpx, and packaged the App or the unsigned IPA: 200 s for
+macOS and 235 s for iOS.
+
+| Comparison with the earlier verified build | Result |
+| --- | --- |
+| macOS library file set | 1294 = 1294, no difference |
+| `*_b.metal`, 386 files | byte-identical |
+| metallib, reflection, `inputs.tsv`, `_b_build.json`, 908 files | byte-identical |
+| iOS library, 907 files | byte-identical |
+| Two independent clean builds | no difference |
+| App `msl/` (520 metallib) and `program/` | no difference |
+| `c1_full.tsv`, `cb_extent.tsv` | first-line timestamp only |
+| `dmhost` | differs by the debug path compiled into it |
+
+The libraries were 386 base, 101 readable-tile and 33 vertex-input ones
+(520 per platform) with the same `inputs.tsv` stamp, and the compiler reported
+`shaders 386: ok 386` with no cache hit. The regenerated MSL is therefore the
+same text the earlier build used, and the Shader corrections this project carries
+survive the regeneration: they live in the profile's tables (`shader_map.tsv`,
+`shader_facts.tsv`, `shader_pairs_extra.tsv`) and in the chain tools, not in
+edited output files. `git log --all --diff-filter=A` shows no `*.metal` or
+`*.metallib` ever committed, so the libraries are products, not sources.
+
+Runtime, with the clean host, the clean modules and the clean libraries reading
+the containers directly (no packaging, no earlier App): a 200 s run presented
+10,801 frames with 18,000 audio callbacks and no underrun, and a 330 s run
+reached a real match (Manchester City vs Paris SG, clock 05:13 to 10:21) with
+pitch, crowd, boards, players, shadows, HUD and Radar 2D normal.
+`failed to create render pipeline` and `not written by vertex shader` counted 0;
+the remaining `[RED]` lines were the known unimplemented NVN queries listed under
+[compatibility](compatibility.md). iOS was built and compared statically only:
+the IPA carries the 520 matching iOS libraries, and no device was signed,
+installed or run.
+
+In the clean clone the script suite passed 148 tests (154 with the regression
+tests the two fixes added), `scripts/check_markdown_links.py` found 39 files and
+191 links with no error, and `scripts/check_fifa23_public.py` reported no
+findings.
+
+Scope: byte-identical reproduction depends on the pinned toolchain above; another
+Metal compiler version can produce different metallib bytes without changing what
+runs. The 2 GB of libraries and artifacts stay outside Git — regenerating them is
+the supported workflow, and the reference numbers above are what a rebuild is
+compared against.
+
+The rebuild also exposed two limits in the tooling, both fixed afterwards: the
+launcher required a `build-manifest.json` that only the standalone source build
+wrote, and the source build required `.git` at its last step, which a downloaded
+source archive cannot answer. Both were rechecked after the fix: a tree exported
+without `.git` (`git archive`) built the same 1294 library files byte for byte and
+recorded `source_revision: null` in its manifest, and `scripts/run_fifa23.py`
+started the game both from that output directory and from the wrappers'
+`build/work`, which holds no manifest at all.
+
 ## Platforms and evidence
 
 | Platform | Evidence | Scope |

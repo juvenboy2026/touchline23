@@ -23,6 +23,9 @@ directory (default `build/work`, which Git ignores). The script refuses a Shader
 library whose `inputs.tsv` names other inputs, so a stale or foreign library is
 an error rather than a silent link.
 
+A Git checkout and a downloaded source archive build the same way: nothing in the
+build reads `.git`, so a release ZIP is enough beside the game inputs.
+
 The rest of this page explains what those stages do and how to run them by hand,
 which is what to do when a stage fails or when a change needs a controlled
 comparison.
@@ -184,11 +187,14 @@ block for Spyder F5. It uses normal project tools in this order:
    `patch_nso.py`. Without it, module regeneration is explicitly absent.
 
 Outputs include `pkg/`, `profile/`, `shaders/`, `gen/`, `dmhost`, `patched/` and a
-private `build-manifest.json`. Existing content-addressed caches can accelerate
-repeats. For a clean proof use a new output directory and leave `DMSH_CAS`,
-`DMSH_PREFILL` and `IOSOUT` unset; do not point them at old overlays. The manifest
-records input and library hashes but does not certify runtime visuals or sound.
-No IPA packaging, signing, installation or publishing is performed by this helper.
+private `build-manifest.json`. The manifest names the source revision and whether
+the tree was dirty when this is a Git checkout; a downloaded source archive has
+no `.git`, records `null` there and builds the same way. Existing
+content-addressed caches can accelerate repeats. For a clean proof use a new
+output directory and leave `DMSH_CAS`, `DMSH_PREFILL` and `IOSOUT` unset; do not
+point them at old overlays. The manifest records input and library hashes but
+does not certify runtime visuals or sound. No IPA packaging, signing,
+installation or publishing is performed by this helper.
 
 ## iOS shader build and unsigned IPA
 
@@ -255,22 +261,31 @@ and crowd path in tested scenes, without guaranteeing every device or scene.
 ## Isolated runtime check
 
 Set `ORIGINAL_SAVE` to the existing save directory and `NEW_RUN` to a new external
-run directory before launching:
+run directory before launching. `--build` takes any directory a build left behind:
+the wrappers' `build/work`, or an output directory of `scripts/build_fifa23.py`.
+Resources come from the containers (the mode both wrappers default to) or from an
+extracted RomFS tree:
 
 ```sh
+python3 scripts/run_fifa23.py --build "$BUILD" \
+  --base "$GAMECARD_XCI" --update "$UPDATE_NSP" --prod-keys "$PROD_KEYS" \
+  --save-source "$ORIGINAL_SAVE" --run-dir "$NEW_RUN" --seconds 900
+
 python3 scripts/run_fifa23.py --build "$BUILD" --romfs "$ROMFS" \
   --save-source "$ORIGINAL_SAVE" --run-dir "$NEW_RUN" --seconds 900
 ```
 
-The launcher copies the save into a new external run directory and uses the
-source-built host and freshly rewritten modules. It does not mutate the original
-save. Logs and a control file stay in that run directory. The existing `DM_CTL`
-interface supports commands appended to `control.txt`, for example `A`,
-`Plus`, `LDown~0.2`, or `shot <external-path.png>`. See the
-[debugging guide](../agents/05-debugging.md). Use it to enter a real match, switch
-Radar 2D/3D in the game menus, test player selection and inspect shadows across
-multiple moments. Listen for commentary. A time-limit exit is not a crash or a
-successful visual test by itself.
+No build manifest is required: the launcher checks what the host itself reads
+(`dmhost`, `patched/<module>.patched.bin` with its `.fixups.tsv`, `shaders`)
+and names the Shader chain from a manifest when the build wrote one, otherwise
+from the single `shaders/b-<chain>`. It copies the save into a new external run
+directory and does not mutate the original save. Logs and a control file stay in
+that run directory. The existing `DM_CTL` interface supports commands appended to
+`control.txt`, for example `A`, `Plus`, `LDown~0.2`, or `shot <external-path.png>`.
+See the [debugging guide](../agents/05-debugging.md). Use it to enter a real
+match, switch Radar 2D/3D in the game menus, test player selection and inspect
+shadows across multiple moments. Listen for commentary. A time-limit exit is not
+a crash or a successful visual test by itself.
 
 ## Regression checks
 

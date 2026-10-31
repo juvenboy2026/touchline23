@@ -15,6 +15,10 @@ nx_extract writes out of --base (--manifest leaves the RomFS on the image) --
 and is only used once it reproduces the container's header digest. --key-file
 stays the explicit private source, is consulted first, and is the fallback when
 no module is available. No key is written to the log or the manifest.
+
+The manifest names the source revision when this tree is a Git checkout. A
+downloaded source archive has no .git: it builds the same way and records null
+there instead of failing at the last step.
 """
 # ---- Spyder settings (keep local paths out of committed source) ----
 ARCHIVES = []       # shader.big and shaderboot.big (BIG4, chunkzip or EASF)
@@ -70,6 +74,23 @@ def identify(fs, profile):
         except OSError:
             continue
     return None
+
+
+def source_state():
+    """-> (revision, dirty) of this checkout, or (None, None) when it is not one.
+
+    A source archive downloaded from a release or a Git host's "Download ZIP"
+    has no .git directory, and Git may not be installed at all; neither says
+    anything about the build, so the manifest records null rather than failing.
+    """
+    try:
+        revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO, text=True,
+                                           stderr=subprocess.DEVNULL).strip()
+        dirty = bool(subprocess.check_output(['git', 'status', '--porcelain'], cwd=REPO,
+                                             text=True, stderr=subprocess.DEVNULL))
+    except (OSError, subprocess.CalledProcessError):
+        return None, None
+    return revision, dirty
 
 
 def code_exefs(a, out, env):
@@ -280,12 +301,13 @@ def main():
         for module in ('main', 'sdk'):
             run([sys.executable, REPO / 'dm/tools/patch_nso.py', a.exefs / module,
                  out / 'patched', module])
+    revision, dirty = source_state()
     manifest = {'chain': chain, 'host_from_source': True, 'modules_rewritten': bool(a.exefs),
                 'shader_count': len(expected),
                 'host_sha256': hashlib.sha256((out / 'dmhost').read_bytes()).hexdigest(),
                 'tool_lock_sha256': hashlib.sha256((TOOLS / 'dmsh_chain.lock').read_bytes()).hexdigest(),
-                'source_revision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=REPO, text=True).strip(),
-                'source_dirty': bool(subprocess.check_output(['git', 'status', '--porcelain'], cwd=REPO)),
+                'source_revision': revision,
+                'source_dirty': dirty,
                 'module_inputs': {name: hashlib.sha256((a.exefs / name).read_bytes()).hexdigest()
                                   for name in ('main', 'sdk')} if a.exefs else {},
                 'inputs': inputs,

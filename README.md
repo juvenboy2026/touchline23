@@ -71,7 +71,9 @@ saves and diagnostics remain in the App container; preserve them before reinstal
 Use an Apple silicon Mac with Xcode and its Metal toolchain, .NET 10,
 SPIRV-Cross, Python dependencies and XcodeGen for iOS. The validated tool versions,
 locked fingerprints and dependency installation are in the [build guide](docs/fifa23/build.md).
-The published checkout contains the project source needed for these builds.
+The published checkout contains the project source needed for these builds. A Git
+clone and a downloaded source archive build the same way: nothing in the chain
+reads `.git`, and a full rebuild needs no earlier build output.
 
 ```sh
 ./scripts/build-mac.sh --nsp-dir "/path/to/your/fifa23-folder"

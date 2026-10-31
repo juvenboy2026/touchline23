@@ -60,7 +60,8 @@ macOS 可在启动器设置中另选存档和日志的存储位置。iOS 的存�
 
 需要 Apple 芯片 Mac、Xcode 及 Metal 工具链、.NET 10、SPIRV-Cross、相关 Python 依赖，
 iOS 另需 XcodeGen。[构建指南](docs/fifa23/build.md)列出了实际验证的工具版本、锁定指纹和依赖安装方法。
-这些构建使用的项目源码已包含在公开仓库中。
+这些构建使用的项目源码已包含在公开仓库中。Git 克隆和下载的源码压缩包构建方式相同：
+构建链不读取 `.git`，完整的重新构建也不需要任何旧构建产物。
 
 ```sh
 ./scripts/build-mac.sh --nsp-dir "/path/to/your/fifa23-folder"
