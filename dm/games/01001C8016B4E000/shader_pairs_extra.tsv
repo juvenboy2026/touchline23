@@ -1,0 +1,15 @@
+# Runtime-observed vertex/pixel pairs the shader archives' own file pairing does not list (the engine recombines
+# materials at run time). One row per "failed to create render pipeline ... not written by vertex shader" line in a
+# real session log (iPhone Air and Mac runs, 2026-10-24); without the row vs_pad leaves the vertex without those
+# outputs and Metal drops every such draw -- whole stands flashed black in the pre-match entrance and post-match
+# review (a1368cdbfc35184e/4264f357ee50d834 and a3d78a84f64ae501/0fa51513d63863ee dominate).
+a1368cdbfc35184e	4264f357ee50d834
+a3d78a84f64ae501	0fa51513d63863ee
+3a152355b0a6cd51	b8ab3446e5de6b56
+4ebace4ecacd78fa	9084fb5669058ea1
+829d00998ebae5f2	f4f83a6ae92a63fd
+829d00998ebae5f2	b2039785e0f88741
+627f1eb74781e099	c4e6b2e72ef8cfb5
+627f1eb74781e099	a4f30ef5fa1aefe0
+32f8795a0c70bfa7	ddb02aea17acaf27
+d1b917fb4db57a03	b1cd9988240c6f37

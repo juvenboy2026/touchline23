@@ -1,0 +1,5 @@
+# Validated local Python dependencies for build_fifa23.py (Python 3.13.12).
+# pycryptodome is needed only for encrypted EASF inputs.
+capstone==5.0.7
+lz4==4.4.5
+pycryptodome==4.1.0

@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "reviewed": "2026-10-26",
+  "policy": "Only verified Title-ID-associated aliases are displayed. Regional wording is preserved unless an official Simplified Chinese source is available. Names imply no game-language support. No runtime networking. (Touchline 23: only the one registered title is listed.)",
+  "sources": {
+    "titledb-hk": {
+      "url": "https://github.com/blawar/titledb/blob/49db6611a8cb0278082cc2544e304fe4ae51e552/HK.zh.json",
+      "revision": "49db6611a8cb0278082cc2544e304fe4ae51e552",
+      "sha256": "76b92e04bc53c0beb490eed9f5ab30916747d408c3a4b9b3c1d893e7f763035f",
+      "license": "MIT (Blake Warner, 2019)"
+    }
+  },
+  "names": {
+    "01001C8016B4E000": {
+      "english": "FIFA 23 Legacy Edition",
+      "status": "verified",
+      "zh_hans": "FIFA 23 传奇版",
+      "checked": "2026-10-26",
+      "source_ids": [
+        "titledb-hk"
+      ],
+      "note": "Exact Title ID/NSUID; Chinese edition title comes from the same EA-supplied eShop description (FIFA 23 傳奇版), not an invented translation of Legacy Edition. Character conversion only.",
+      "candidates": [
+        {
+          "nsuid": "70010000047792",
+          "name": "EA SPORTS™《FIFA 23》Nintendo Switch™ Legacy Edition"
+        }
+      ],
+      "nsuid": "70010000047792"
+    }
+  }
+}

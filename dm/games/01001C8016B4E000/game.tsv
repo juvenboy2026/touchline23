@@ -1,0 +1,60 @@
+
+# ---- Identity ----
+title_id	01001C8016B4E000
+program_id	01001C8016B4E000
+
+# ---- App ----
+name	FIFA 23 Legacy Edition
+# the bundle display name and the App/IPA artifact base name (Touchline23Packaging); defaults to name
+app_name	Touchline 23
+ipa	Touchline23.ipa
+# a bundle identity of its own: it installs beside any other port and keeps its own container
+bundle_id	com.ohxiaoguang.touchline23
+app_category	public.app-category.games
+
+# ---- Versions ----
+# the same host runs both retail versions; nn::oe::GetDisplayVersion picks the row by main's build ID
+build	v196608	1.0.3	main=4b713267a882da35b4789a5e45823ac4	sdk=43211771ed39e7fcef03d88e27091831
+build	v0	1.0.0	main=da9da20e1649759ab2e3ebfbd6307c11	sdk=43211771ed39e7fcef03d88e27091831
+package	v196608
+shader_versions	v0
+
+# ---- Files ----
+# not loaded, main takes nothing from them the host does not supply: subsdk0 (GLSLC)
+modules	main sdk
+romfs_marker	data3.big
+zip_store	.big:.cbac:.vp6:.metallib
+
+# ---- Memory ----
+# The NPDM declares virtual address memory, but the game never exercises it: in every Mac run (menus and full
+# matches) it calls no AllocateAddressRegion (no SVC 0x2E placeholder line) and maps no alias page (no [mem]
+# alias line); all its memory is the startup heap. The 4.375 GB alias of the first bring-up was a defensive
+# size from the NPDM, and with it the 8 GB block failed to reserve on iOS: without the extended-virtual-addressing
+# entitlement a process has about 7.4 GB of address space in all, and nnosInitialize died at the reservation
+# (FATAL reserve guest AS; the single-reservation ceiling measured on a real device is 6 GB, see hle_svc.c).
+# 5 GB: alias 1.5 GB (node-area headroom) + stack 256 MB + 256 MB offset leave 3 GB for the heap;
+# nninitStartup asks for 0xba400000 (2.98 GB), and a Mac match used 2.91 GB of it.
+mem_reserve	0x140000000
+mem_alias	0x60000000
+mem_stack	0x10000000
+app_pool	0xCD500000
+# the NPDM declares 8 MB of system resource
+sys_resource	0x800000
+
+# ---- Shader split ----
+shader_groups	/data/=data
+shader_note	FIFA 23 Legacy Edition NXSHADER programs
+
+# ---- Shader source (optional keys; see tools/packaging_gui/shader_sources.py) ----
+# The shaders are EA archive programs (EASF): both archives are BIG4 members of
+# one RomFS file, encrypted with a key the game's own program module carries.
+# The GUI's generic engine reads these rows to locate them; the preparation
+# itself is scripts/build_fifa23.py, called by any profile with this format.
+archive_format	easf
+archive_container	datax.big
+archive_member	data/fifarna/shader.big
+archive_member	data/fifarna/shaderboot.big
+
+# ---- Graphics ----
+# Allow dynamic handles; rebuilt Direct arrays use descriptor-pool IDs through reflection.
+tex_dyn_slots	on
