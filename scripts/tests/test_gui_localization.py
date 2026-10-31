@@ -85,7 +85,7 @@ class LocalizationCoverage(unittest.TestCase):
         self.assertGreater(len(catalog), 150)
         count = 0
         for name in ('NXPackagingGUI/App.swift', 'NXPackagingGUI/TaskController.swift',
-                     'NXPackagingGUI/SupportedGamesView.swift', 'NXPackagingGUI/PackagingConfirmationView.swift',
+                     'NXPackagingGUI/PackagingConfirmationView.swift',
                      'PackagingModel/ApprovalSheet.swift'):
             source = (ROOT / 'gui/Sources' / name).read_text()
             for match in re.finditer(r'(?:\bl\(|\bpathRow\(|\bprompt:\s*|\bmessage\s*=\s*)(?=")', source):
@@ -115,24 +115,16 @@ class LocalizationCoverage(unittest.TestCase):
             self.assertIn('l("About Touchline 23")', launcher, name)
             self.assertIn('AboutTouchlineView().environmentObject(language)', launcher, name)
 
-    def test_user_directory_and_sheet_do_not_render_maintenance_history(self):
-        source = (ROOT / 'gui/Sources/NXPackagingGUI/SupportedGamesView.swift').read_text()
-        for old in ('.evidence', 'GameConcept', 'buildVerified', 'runtimeVerified',
-                    'targetSummary', 'Evidence source', 'What the columns mean'):
-            self.assertNotIn(old, source)
-        self.assertIn('model.catalog?.supportedGames', source)
-        self.assertIn('ForEach(GameSort.allCases', source)
+    def test_single_game_ui_has_no_browser_or_addon_editor(self):
         app = (ROOT / 'gui/Sources/NXPackagingGUI/App.swift').read_text()
-        self.assertIn('.sheet(isPresented: $model.showConfirmation)', app)
-        self.assertIn('model.startApprovedBuild()', app)
-        sheet = (ROOT / 'gui/Sources/NXPackagingGUI/PackagingConfirmationView.swift').read_text()
-        self.assertIn('@State private var showDetails = false', sheet)
-        self.assertIn('.frame(height: 210)', sheet)
-        self.assertIn('.lineLimit(2).truncationMode(.middle)', sheet)
-        catalog, _ = templates()
-        for key in ('Confirm Packaging', 'Start Packaging', 'Technical Details',
-                    'Search by name, Title ID or version', 'Supported games: %@'):
-            self.assertTrue(catalog.get(key), key)
+        for text in ('SupportedGamesView', 'supported-games', 'games-search',
+                     'GameSort', '$model.configuration.aoc'):
+            self.assertNotIn(text, app)
+        self.assertIn('l("FIFA 23 Legacy Edition")', app)
+        self.assertIn('l("Nintendo Switch · Base 1.0.0 · Optional update 1.0.3")', app)
+        controller = (ROOT / 'gui/Sources/NXPackagingGUI/TaskController.swift').read_text()
+        self.assertIn('initial.prepareForSingleGameUI()', controller)
+        self.assertFalse((ROOT / 'gui/Sources/NXPackagingGUI/SupportedGamesView.swift').exists())
 
     def test_language_preference_is_not_part_of_configuration_or_bridge_arguments(self):
         configuration = (ROOT / 'gui/Sources/PackagingModel/Configuration.swift').read_text()

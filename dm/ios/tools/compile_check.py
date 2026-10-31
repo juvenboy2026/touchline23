@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compile the iOS host's sources for the iPhone SDK without game files, signing or an Xcode project (CI's iOS build check).
+"""Compile the iOS host's sources for the iPhone SDK without game files, signing or an Xcode project (local iOS build check).
 
 The source list, header paths and -D flags come from the expanded compile commands of dm/host/Makefile, as gen_build.py takes them for the Xcode project:
 the _mac sources stay out, main.c is compiled with -Dmain=dm_main, and dm/ios/Sources (Objective-C) is added.

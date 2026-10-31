@@ -1,150 +1,130 @@
 # Touchline 23
 
-[English](README.md) · [移植说明](docs/fifa23/README.md) · [上游来源](docs/UPSTREAM.md) · [打包工具](docs/packaging-gui.zh-CN.md)
+[English](README.md) · [打包指南](docs/packaging-gui.zh-CN.md) · [兼容性记录](docs/fifa23/compatibility.md)
 
-Touchline 23 是**一款游戏**的原生 Apple 芯片移植：《FIFA 23 遗产版》（Nintendo
-Switch），Title ID `01001C8016B4E000`。游戏自身的 ARM64 代码直接运行；内核服务、
-文件系统、音频输出和 GPU 接口（NVN）为 macOS 与 iOS 重新实现，因此既不是 Switch
-模拟器，也没有超出 Apple 内核要求的 ROM 改造。
+Touchline 23 是专门运行 **Nintendo Switch 版 FIFA 23 Legacy Edition（FIFA 23 遗产版）**
+的原生 Apple 芯片移植项目，提供 **macOS、iOS 和 iPadOS** 启动器，独立维护、独立发布。
+游戏自身的 ARM64 代码运行在宿主实现的系统服务、图形、音频和输入接口上。
 
-本项目基于 [nxnative](https://github.com/seedds/nxnative)，经
-[ohxiaoguang/nxnative-zzg](https://github.com/ohxiaoguang/nxnative-zzg) 取得。
-执行架构、图形后端与最早的移植都是上游成果；本项目取自哪个提交见[上游来源](docs/UPSTREAM.md)。
+游戏文件和主机密钥需要由你自行提供。仓库只包含源码、兼容性元数据与构建工具，
+不提供游戏、密钥或可直接分发的游戏资源。
 
-## 支持的游戏
+## 开始使用
 
-| | |
+1. 准备自己的本体 XCI/NSP、`prod.keys`，以及可选的 1.0.3 NSP 更新包。
+2. 按下方命令构建 `Touchline23.app` 或未签名的 `Touchline23.ipa`，也可以使用图形界面的
+   **Touchline 23 Packaging**。
+3. macOS 在启动器里选择资源文件夹；iPhone/iPad 通过“文件”将资源放进 App 的 Documents
+   目录，子文件夹也会被扫描。
+4. 核对识别结果，选择界面语言、游戏语言和主机模式，再开始游戏。设置中提供“关于 Touchline 23”。
+
+IPA 需要自行签名与侧载。公开源代码不代表可以转售或重新分发本地构建中包含的游戏代码和派生资源。
+
+## 平台与当前状态
+
+| 平台／功能 | 证据与范围 |
 | --- | --- |
-| 游戏 | FIFA 23 遗产版（Nintendo Switch） |
+| Apple 芯片，macOS 26+ | MacBook Air M1 上验证过菜单和正式比赛 |
+| iPhone，iOS 26+ | iPhone Air 用户反馈已能游玩；当前 App/IPA 另有编译和静态检查记录 |
+| iPad，iPadOS 26+ | 共用 iOS 界面和打包目标，尚无独立的 iPad 游玩记录 |
+| 掌机／底座、音效和解说、观众、指示器、2D/3D 雷达、存档 | 验证记录中有 Mac 证据及 iPhone 反馈 |
+| 触摸虚拟手柄与游戏手柄 | iPhone 用户测试通过，手柄型号覆盖仍有限 |
+| 动态球员阴影 | Mac 正式比赛投影及针对性 GPU 检查通过，iPhone 详细对照仍不完整 |
+| macOS MOD overlay | 可选资源覆盖文件夹，有合成测试；不保证某个 FIFA MOD 一定兼容 |
+| 双语启动器／关于页面 | 英文和简体中文；Mac 关于页面交互已测试，iOS 关于页面仅编译，未做设备点击验证 |
+
+[兼容性](docs/fifa23/compatibility.md)和[验证记录](docs/fifa23/validation.md)分别标明实际游玩、
+用户反馈、构建审计和自动测试。构建了新产物，不等于重新验证过游戏运行。
+
+## 游戏版本与资源模式
+
+| 项目 | 信息 |
+| --- | --- |
+| 游戏 | FIFA 23 Legacy Edition（Nintendo Switch） |
 | Title ID | `01001C8016B4E000` |
-| 本体 | 1.0.0（`v0`） |
-| 更新 | 1.0.3（`v196608`），可选 |
-| Shader chain | `a885c56c665a`（`dm/gfx/nvn/dmsh_chain.h`） |
+| 本体 | 1.0.0（`v0`），也是 Shader 的来源版本 |
+| 可选更新 | 1.0.3（`v196608`），现有游玩记录对应的版本 |
+| App／Bundle ID | Touchline 23／`com.ohxiaoguang.touchline23` |
 
-本体与更新是同一个程序的两次构建：更新需要它自己的 RomFS、自己的 `main` 与
-`sdk`，以及对应的重写模块。不要把新版 RomFS 和旧版代码混用。Shader 库由本体的
-EASF 归档生成，对两个版本都有效（更新没有新增 Shader），profile 中记录了这两个
-构建版本。
+代码与资源必须属于同一游戏版本。登记了 1.0.0 构建，并不意味着它有与 1.0.3 相同的游玩验证范围。
 
-## 平台
+**外置 XCI/NSP（默认）**：启动器校验匹配的文件，原地读取容器。本体、密钥和 RomFS 不进入
+产物，但 App 仍包含重写后的程序模块与派生 Shader 库。
 
-- **Apple 芯片 + macOS 26 或更高**：产物是普通 `.app`，从你选择的文件夹读取游戏，
-  存档、日志与临时文件也写在那个文件夹的 `Touchline23/` 里。
-- **iPhone / iPad，iOS 26 或更高**：产物是未签名的 `.ipa`，由你自行签名并侧载。
-  iOS 不允许 App 访问自身容器以外的文件，因此游戏文件放在 App 的 `Documents`
-  目录下（任意子目录都可以）。
+**Directory**：打包工具和底层脚本可以准备并内置 RomFS，产物明显更大，资源版本也随构建固定。
+详见[打包指南](docs/packaging-gui.zh-CN.md)。本 FIFA profile 不提供 DLC 选择器。
 
-两个平台都需要足够的内存：启动时宿主保留 5 GiB 的客户机地址空间，一场比赛常驻
-约 2.8 GiB。6 GB 及以上内存的设备是实际目标。
+macOS 可在启动器设置中另选存档和日志的存储位置。iOS 的存档和诊断留在 App 容器内，重装前请备份。
 
-## 游戏文件由你提供
+## 从源码构建
 
-仓库中没有任何游戏数据。你需要自己的游戏副本：
-
-- `01001C8016B4E000` 的本体 `.xci` 或 `.nsp`；
-- 可选的 1.0.3 更新 `.nsp`；
-- 你的主机 `prod.keys`。
-
-**外置资源（默认）**：启动器只要求选择一个文件夹，它在其中（含子目录）识别本体与
-更新，按内容核对 App 构建时使用的模块 ID，然后原地读取容器——不解包、不复制、不改名。
-App 与 IPA 中不含游戏容器、密钥或 RomFS。
-
-**Directory 模式**：RomFS 解包一次并打入 App，之后不再需要其他文件；产物大得多，
-游戏版本也固定在构建时。需要自包含 App 时使用。
-
-## 构建
-
-环境：Apple 芯片 Mac、Xcode 26（Metal 工具链、`swiftc`、`iconutil`）、.NET 10、
-`spirv-cross`，iOS 还需要 `xcodegen`，以及带 `capstone`、`lz4`、`fontTools`、
-`pycryptodome` 的 Python 3（重写器和 EASF 工具使用）。
+需要 Apple 芯片 Mac、Xcode 及 Metal 工具链、.NET 10、SPIRV-Cross、相关 Python 依赖，
+iOS 另需 XcodeGen。[构建指南](docs/fifa23/build.md)列出了实际验证的工具版本、锁定指纹和依赖安装方法。
+这些构建使用的项目源码已包含在公开仓库中。
 
 ```sh
-./scripts/build-mac.sh --nsp-dir "/你的/fifa23 文件夹"
-./scripts/build-ios.sh --nsp-dir "/你的/fifa23 文件夹"
+./scripts/build-mac.sh --nsp-dir "/path/to/your/fifa23-folder"
+./scripts/build-ios.sh --nsp-dir "/path/to/your/fifa23-folder"
 ```
 
-该文件夹放着本体容器、可选的更新和 `prod.keys`，脚本会自行分辨。产物写入
-`Release/`：`Touchline23.app` 与 `Touchline23.ipa`。
+输出为 `Release/Touchline23.app` 和 `Release/Touchline23.ipa`，这两个入口构建的是外置资源版本。
+默认工作目录是被 Git 忽略的 `build/work`；游戏原始输入、密钥和提取／分析工作放在游戏所在磁盘上。
 
-两个脚本执行同样的阶段，每一阶段都可以复用上次的成果：
+重新构建宿主或启动器时，可复用已有成果：
 
-| 阶段 | 跳过方式 |
+| 已准备的输入 | 参数 |
 | --- | --- |
-| ExeFS 与控制数据（`nx_extract`，仅程序） | `--exefs <ExeFS 目录>` |
-| 重写后的 `main` 与 `sdk`（`dm/tools/patch_nso.py`） | `--patched <build/patched>` |
-| Metal Shader 库（`dmsh_build.py`，macOS 与 iOS） | `--shaders`、`--ios-shaders` |
-| 已备好的 EASF 包 | `--shader-pack <pkg>` |
+| ExeFS | `--exefs <目录>` |
+| 重写后的 main/sdk | `--patched <目录>` |
+| macOS 和 iOS Shader 库 | `--shaders <目录>`／`--ios-shaders <目录>` |
+| EASF 来源包 | `--shader-pack <pkg>` |
 
-`--work` 指定工作目录（默认 `build/work`），`--out` 指定产物，`--app-name`、
-`--version`、`--language`、`--show-fps`、`--icon` 改变启动器显示的内容。
-完整选项见 `./scripts/build-mac.sh --help`。
+本体的 386 个程序生成**每个平台 520 个库**，1.0.3 更新没有新增 Shader。库必须匹配
+`a885c56c665a` 翻译链及本 profile 的输入标记。已有缓存有效时直接复用，不要为界面或文档修改重新生成。
+工作目录、输出路径等选项见 `./scripts/build-mac.sh --help`。
 
-只有当 Shader 库的 `inputs.tsv` 与本 profile 的输入一致时才会被接受，因此来自其他
-游戏、其他 profile 版本或其他 chain 的库会被拒绝，而不是被悄悄链入。从头生成
-520 个库很慢；第二次构建会复用第一次的成果。
+## Touchline 23 Packaging
 
-### 打包工具
+专用于本游戏的双语 SwiftUI 工具：选择 macOS/iOS 或双平台、外置 XCI/NSP 或 Directory，
+检查资源、确认构建、查看进度，最后取得审计通过的产物。保留 Shader 缓存、错误诊断和取消功能，
+不再提供游戏浏览列表或不适用的 DLC 输入。
 
-`scripts/build_packaging_gui.py --output <目录>` 构建 **Touchline 23 打包工具**：
-一个 SwiftUI App，用点击完成同样的工作——选择游戏文件夹、检查配置、查看日志、
-取得 App 或 IPA。它自带 Python、读取器、提取器和 profile，可以放到任意位置。
-见[使用说明](docs/packaging-gui.zh-CN.md)。
+使用 `scripts/build_packaging_gui.py --output <新目录>` 构建工具。
+[中文指南](docs/packaging-gui.zh-CN.md)说明内置依赖、磁盘占用、输出保护和工具本身的源码构建方式。
 
-## 已验证的功能
+## 已知限制
 
-证据按功能分别记录：Mac 上的检查不等于 iPhone 上的检查，IPA 结构审计也不等于实际
-游玩。细节与出处见[兼容性](docs/fifa23/compatibility.md)与[验证记录](docs/fifa23/validation.md)。
+- 不保证稳定 60 FPS。本 profile 没有 30/60 FPS 开关；共享引擎的诊断用帧节奏参数并不是经过验证的帧率补丁。
+- 启动时保留 5 GiB 客户机地址空间，历史比赛样本常驻约 2.8 GiB。这是观测数据，不是适用于所有
+  设备的内存要求，也不保证不会触发 iOS jetsam；已记录的 iPhone 有 8 GB 内存。
+- 场地、天气、特殊场景和长时间运行覆盖不完整。加载时可能出现音频欠载，部分服务仍会打印 `[RED]` 诊断。
+- 不提供在线联机或 Switch 网络服务。
+- 不支持 Intel Mac，也没有单独验证过完整的 iPad／设备兼容矩阵。
 
-| 功能 | 状态 |
-| --- | --- |
-| 原生启动进入菜单并进入比赛 | 可用，Mac 与 iPhone |
-| 掌机 / 座机模式 | 两种模式均已报告可用 |
-| 球员、球场、体育场、光照、观众 | 已测试场景渲染正常 |
-| 比赛音效、观众声、解说 | 可用，Mac 与 iPhone |
-| 球员指示、2D / 3D 雷达 | 可用 |
-| 存档 | 可用，可从存档继续比赛 |
-| iOS 触屏操作与手柄 | 可用 |
-| 球员动态阴影 | 已修复；Mac 正式比赛中截取到投影 |
-| 场边人员（摄影、安保、旗手） | 已观察到正常显示 |
+## 开发与本地检查
 
-## 已知问题与限制
-
-- 场馆、天气、特殊场景与长时间运行的覆盖仍不完整，iPad 尚无单独记录。
-- iOS 的物理内存是另一道限制：5 GiB 地址保留并不代表 jetsam 不会结束进程。
-  未使用 Increased Memory Limit 权限签名的构建，仍可能在重场景中被系统终止。
-- 采样帧耗时接近 60 fps，但偶有长帧，因此不作稳定 60 fps 的承诺。
-- 载入时音频可能欠载；少数诊断服务调用尚未实现（日志中会有 `[RED]` 行）。
-- 联网功能、amiibo 与 Switch 自身的网络服务不在本移植范围内。
-- IPA 未签名，签名与安装由你完成。
-
-## 目录
-
-| 路径 | 用途 |
-| --- | --- |
-| `dm/host/` | 宿主：内核服务、NVN → Metal、音频、文件系统、输入 |
-| `dm/gfx/` | Shader 翻译链及其工具（`dmsh_*`） |
-| `dm/games/01001C8016B4E000/` | 游戏 profile：常量、Shader 表、构建版本 |
-| `dm/tools/` | 重写器、提取器、profile 辅助工具 |
-| `dm/macos/`、`dm/ios/`、`dm/apple/` | 启动器、平台胶水层与 iOS 工程 |
-| `gui/`、`tools/packaging_gui/` | 打包 App 及其引擎 |
-| `scripts/` | 用户运行的命令 |
-| `docs/` | 指南、移植笔记与验证记录 |
-
-## 测试
+[图形层](dm/gfx/README.md)、[profile 格式](dm/games/README.md)、
+[提取流程](docs/agents/01-extract.md)和[调试指南](docs/agents/05-debugging.md)介绍开发方法。
+测试在本地执行，本项目没有 GitHub Actions 工作流。
 
 ```sh
-python3 -m unittest discover -s scripts/tests            # 构建脚本、打包、profile
-make -C dm/host/tests GAME=01001C8016B4E000 run          # 本机宿主单元测试
-python3 -m unittest discover -s dm/resource/tests        # 容器读取器
-DM_GAME=01001C8016B4E000 python3 -m unittest discover -s dm/gfx/tests
-cd gui && swift test                                      # 打包 App 的模型层
+python3 -m unittest discover -s scripts/tests
+python3 scripts/check_markdown_links.py
+python3 scripts/check_fifa23_public.py
+swift test --package-path gui
 ```
 
-Python 测试不需要游戏文件。构建出真实的 App 或 IPA 是另一回事，只有在设备上实际
-运行才能说明游戏能不能玩。
+公开内容扫描器会对部分已保留的第三方文件类型要求人工复核，处理结论见[源码发布审查](docs/fifa23/public-audit.md)。
+[构建与回归说明](docs/fifa23/build.md#regression-checks)另列资源及 GPU 测试与所需样本。
 
-## 许可
+## 项目来源与致谢
 
-MIT，见 [LICENSE](LICENSE)。nxnative 及其贡献者保留署名，第三方声明在
-`dm/third_party/`。本仓库不分发任何游戏代码、游戏数据、密钥、字体、美术资源或已编译
-的 Shader 库；App 图标由 `assets/app-icon/make_icon.swift` 绘制。
+Touchline 23 基于 [nxnative](https://github.com/seedds/nxnative) 及其作者和贡献者的成果开发。
+FIFA 23 的兼容性、图形与资源适配及独立打包支持在该引擎基础上完成，并由本项目继续维护。
+这些后续适配不会被误记成全部来自官方上游；详见[项目来源](docs/UPSTREAM.md)。
+
+保留原始 [MIT 许可证](LICENSE)与作者声明，各依赖继续适用自身条款，包括 MsgPack 的 Apache-2.0。
+[第三方声明](THIRD_PARTY_NOTICES.md)提供完整材料索引。项目图标为自行生成的原创图形。
+Touchline 23 与 EA SPORTS、Nintendo 或 Apple 不存在官方隶属或背书关系。
+
+[官方仓库](https://github.com/ohxiaoguang/touchline23) · [问题反馈](https://github.com/ohxiaoguang/touchline23/issues)

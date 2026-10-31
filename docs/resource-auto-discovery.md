@@ -1,5 +1,10 @@
 # Game resource auto-discovery (macOS and iOS)
 
+> Historical engineering report for the shared discovery implementation. Dated
+> build/status statements and other-title cases below retain their original scope;
+> they are not the current product support list. Use the [current launcher guide](launcher-and-packaging-ui.md)
+> and [FIFA validation](fifa23/validation.md) for Touchline 23 behavior/evidence.
+
 Status: implemented on `feature/resource-auto-discovery`. Scope: how a packaged game App finds
 its own base game, update and console keys. It does not change the XCI/NSP reader, the guest, or
 the packaging GUI.
@@ -185,7 +190,8 @@ leaves behind are covered, not just the Swift API.
 
 ## Build and verification
 
-Acceptance re-check on 2026-10-26 (same machine, branch `feature/resource-auto-discovery` at `5690b5f`):
+Historical acceptance re-check on 2026-10-26 (maintainer-source record `5690b5f`,
+not a current branch or this repository's commit):
 
 | what | result |
 | --- | --- |
@@ -216,28 +222,12 @@ validate_context(<wonder context>, macos) -> REFUSED: chain differs from the sou
 validate_chain_sources(<wonder context>)   -> REFUSED: snapshot differs ... tools/dmsh_chain.py
 ```
 
-The only complete retained input set on this machine
-(`wonder-test/010015100B514000-work/unified-build-01`, `prepared` + `cache` + `ios`) was built at
-chain `860a72115e8d`; the other caches are `dec5ee141a9f` and `e5ea6dbca04c`. The difference is
-upstream: `dm/gfx/tools/dmsh_chain.py` changed on 2026-10-25 (commits `d472961` / `674c2e1`), and
-this branch touches no file under `dm/gfx/`, so it cannot reuse or re-stamp those caches.
-
-Measured cost of a compliant rebuild of that context, from its own `pipeline-report.json`:
-
-| | |
-| --- | --- |
-| Shaders to translate and compile | 12,817 |
-| Shader stage, measured | 4,350 s (≈72 min), single machine |
-| Output | 2.6 GB macOS + 380 MB iOS |
-| Free space on the volume | 659 GB (space is not the limit; CPU time is) |
-
-There is no per-shader resume cache to lean on (the context's `tmp/` holds only 2.4 MB of
-interpreter byproducts), and re-stamping the old `b-860a72115e8d/` would be exactly the
-"treat an old cache as verified" shortcut this pipeline exists to prevent. Per the task's own
-rule — measure, record, then stop rather than start a large Shader regeneration — this item was
-left unexecuted. Consequently: **no new App or IPA exists, no artifact audit was run on one, and
-no game was launched**, even though every layer below that (compile, link, packaging audit,
-symbol-level inclusion) was verified.
+The original non-FIFA prepared contexts had earlier chain fingerprints and were
+correctly refused. That dated result demonstrates cache/source validation; it is
+not a current claim that FIFA artifacts cannot be built. Private context locations,
+old workspace inventories and then-current branch state are omitted. Current FIFA
+artifacts and library reuse are recorded in [validation](fifa23/validation.md) and
+the [build guide](fifa23/build.md).
 
 ## Limits
 

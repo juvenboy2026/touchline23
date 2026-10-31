@@ -13,9 +13,6 @@ struct ContentView: View {
             HStack {
                 Text(l("Touchline 23 Packaging")).font(.title2.bold())
                 Spacer()
-                Button(l("Supported Games…")) { model.showGames = true }
-                    .help(l("Browse games available for packaging."))
-                    .accessibilityIdentifier("supported-games")
                 Picker(l("Interface language"), selection: $language.language) {
                     ForEach(InterfaceLanguage.allCases, id: \.self) { item in
                         Text(item == .system ? GUIText(key: "System language").render(language.language) : item.displayName).tag(item)
@@ -50,10 +47,6 @@ struct ContentView: View {
             Button(l("Clear cache"), role: .destructive) { model.clearCache() }
         } message: {
             Text(l("Remove %@ of managed cache. Other files and previous cache locations are kept.").replacingOccurrences(of: "%@", with: model.cacheSize))
-        }
-        .sheet(isPresented: $model.showGames) {
-            SupportedGamesView(model: model, close: { model.showGames = false })
-                .environmentObject(language)
         }
     }
 
@@ -136,6 +129,9 @@ struct ContentView: View {
     private var gameSection: some View {
         GroupBox {
             VStack(alignment: .leading, spacing: 8) {
+                Text(l("FIFA 23 Legacy Edition")).font(.headline)
+                Text(l("Nintendo Switch · Base 1.0.0 · Optional update 1.0.3"))
+                    .font(.caption).foregroundStyle(.secondary)
                 pathRow("Base game", Binding(get: { model.configuration.base }, set: { model.configuration.selectBase($0) }), directory: model.configuration.automatic, prompt: "Choose a resource folder or enter an .xci / .nsp path")
                 HStack(spacing: 8) {
                     Text(l("Game identity")).frame(width: 92, alignment: .leading)
@@ -155,11 +151,6 @@ struct ContentView: View {
     }
 
     // MARK: - Inputs
-
-    private var directoryMode: Bool { model.configuration.mode == "directory" }
-    private var addOnAllowed: Bool {
-        !model.configuration.automatic && directoryMode
-    }
 
     private var inputSection: some View {
         GroupBox(l("Inputs")) {
@@ -338,10 +329,6 @@ struct ContentView: View {
             VStack(alignment: .leading, spacing: 8) {
                 pathRow("Cache folder", $model.configuration.cache, directory: true)
                     .disabled(model.running)
-                if addOnAllowed {
-                    pathRow("DLC folder (optional)", $model.configuration.aoc, directory: true,
-                            prompt: "One DLC per numbered folder").disabled(model.running)
-                }
                 HStack {
                     Text(model.cacheSize).font(.caption).foregroundStyle(.secondary)
                     Button(l("Measure cache")) { model.measureCache() }.disabled(model.running)

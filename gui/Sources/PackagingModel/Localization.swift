@@ -84,6 +84,9 @@ public struct GUIText: ExpressibleByStringLiteral, ExpressibleByStringInterpolat
         "Put files in Files → On My iPhone → \(name). Subfolders are scanned; files stay in place."
     }
     public static let catalog: [String: String] = [
+        "Profile metadata": "游戏配置元数据",
+        "FIFA 23 Legacy Edition": "FIFA 23 遗产版",
+        "Nintendo Switch · Base 1.0.0 · Optional update 1.0.3": "Nintendo Switch · 本体 1.0.0 · 可选更新 1.0.3",
         "American English": "美式英语",
         "British English": "英式英语",
         "Latin American Spanish": "拉丁美洲西班牙语",
@@ -215,11 +218,6 @@ public struct GUIText: ExpressibleByStringLiteral, ExpressibleByStringInterpolat
         "Review fingerprint (SHA-256)": "审核指纹（SHA-256）",
         "Technical Details": "技术详情",
         "Copy full value": "复制完整内容",
-        "Browse games available for packaging.": "浏览可打包的游戏。",
-        "Search by name, Title ID or version": "搜索游戏名称、Title ID 或版本",
-        "Supported games: %@": "支持 %@ 款游戏",
-        "Loading games…": "正在加载游戏…",
-        "Select a game to view details": "选择游戏查看详情",
         "External mode keeps game images and keys outside the artifact.": "外置模式的游戏镜像与密钥保留在产物之外。",
         "Directory mode bundles prepared resources and needs more disk space.": "Directory 模式会内置已准备的资源，需要更多磁盘空间。",
         "iOS needs the extended-virtual-addressing entitlement when signing (guest reservation above 6 GB)": "iOS 签名时需要扩展虚拟地址权限（游戏预留空间超过 6 GB）。",
@@ -346,7 +344,6 @@ public struct GUIText: ExpressibleByStringLiteral, ExpressibleByStringInterpolat
         "Completed": "已完成",
         "Confirm a real build": "确认一次真实构建",
         "Confirm this real build?": "是否确认执行这一次真实构建？",
-        "DLC folder (optional)": "DLC 目录（可选）",
         "DLC folders require iOS Directory mode; clear this input for other combinations.": "DLC 目录只用于 iOS 内置资源构建；其他组合请清空该输入。",
         "DLC folders require iOS Directory mode; this selection cannot build.": "DLC 目录只用于 iOS 内置资源构建；当前组合会阻止打包。",
         "DLC: bundle %@ (one per numbered folder)": "DLC：打包 %@（每个数字目录一份）",
@@ -362,7 +359,7 @@ public struct GUIText: ExpressibleByStringLiteral, ExpressibleByStringInterpolat
         "English": "English",
         "Estimated minimum %@; available %@": "预计至少 %@；可用 %@",
         "Exit %@": "退出码 %@",
-        "External XCI / NSP": "XCI 外置资源",
+        "External XCI / NSP": "外置 XCI / NSP",
         "Failed": "失败",
         "Failed · ": "未通过 · ",
         "Failed · See task log": "失败 · 请查看任务日志",
@@ -399,7 +396,6 @@ public struct GUIText: ExpressibleByStringLiteral, ExpressibleByStringInterpolat
         "None": "无",
         "Not checked": "未检查",
         "Not recorded (older review)": "未记录（旧确认单）",
-        "One DLC per numbered folder": "每个数字目录一份 DLC",
         "Open": "打开",
         "Open diagnostic logs": "打开诊断日志目录",
         "Original ExeFS": "原始 ExeFS",
@@ -490,9 +486,7 @@ public struct GUIText: ExpressibleByStringLiteral, ExpressibleByStringInterpolat
         "stderr / failure": "stderr / 失败",
         "version unknown": "版本未知",
         "简体中文": "简体中文",
-        // Supported games window
-        "Supported Games": "支持的游戏",
-        "Supported Games…": "支持的游戏…",
+        // Shared profile metadata schema
         "Every registered game profile, with what the engine can build and what was verified.": "列出每个已登记的游戏配置，说明引擎能为它构建什么、以及已经验证过什么。",
         "Registered profile": "已登记配置",
         "Build capability": "构建能力",
@@ -504,7 +498,6 @@ public struct GUIText: ExpressibleByStringLiteral, ExpressibleByStringInterpolat
         "The packaged game was started and reported working, with the record that states it.": "打包后的游戏已启动并有记录表明可用，且注明记录来源。",
         "Refresh": "刷新",
         "Done": "完成",
-        "Sort": "排序",
         "Name (A–Z)": "名称（A–Z）",
         "Title ID": "Title ID",
         "Evidence": "验证记录",
@@ -512,8 +505,6 @@ public struct GUIText: ExpressibleByStringLiteral, ExpressibleByStringInterpolat
         "What the columns mean": "各列含义",
         "Profile is not readable": "配置不可读",
         "Reading the registered games…": "正在读取已登记的游戏…",
-        "The game list is not loaded yet": "游戏列表尚未载入",
-        "No game matches this search": "没有匹配的游戏",
         "Select a game to see its registered profile": "选择一个游戏查看其已登记配置",
         "A profile describes constants; it does not verify a build or a run.": "配置只描述常量，不代表构建或运行已验证。",
         "App name": "App 名称",
@@ -561,7 +552,7 @@ public struct GUIText: ExpressibleByStringLiteral, ExpressibleByStringInterpolat
     public static func kind(_ key: String) -> GUIText {
         GUIText(key: ["build":"Build", "check":"Preflight", "simulation":"Simulation", "identify":"Identify",
                       "plan":"Recipe preview", "review":"Review", "inspect":"Inspection",
-                      "games":"Supported Games"][key] ?? key)
+                      "games":"Profile metadata"][key] ?? key)
     }
     public static func mode(_ key: String) -> GUIText {
         GUIText(key: ["directory":"Bundled resources (Directory)", "nsp":"External XCI / NSP", "none":"None"][key] ?? key)

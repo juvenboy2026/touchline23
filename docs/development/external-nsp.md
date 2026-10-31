@@ -1,6 +1,10 @@
 # External NSP resources: implementation and validation
 
-> This guide contains dated implementation/validation sections. Initial statements about no commits or unverified devices apply to their original scope. For the current FIFA-specific recipe and GUI use [packaging GUI](../packaging-gui.md) and the [validation records](../fifa23/validation.md); generic preparation and GUI asset reuse are different paths.
+> Historical shared-resource engineering record. Commands and other-title tests
+> below describe their original pipeline and may require profiles/fixtures not
+> shipped here; they are not the current user recipe. Use the [packaging guide](../packaging-gui.md)
+> and [FIFA validation](../fifa23/validation.md) for this independent project.
+
 
 This is an incremental runtime implementation, not a claim that all nxnative games
 have been validated with external containers. Default directory mode is preserved.
@@ -865,7 +869,10 @@ are displayed and recorded. No NSZ decompression or deletion occurs. Container
 module identities are checked by preparation/consumers, not trusted solely from
 filename tags. Full CNMT/content-version association remains future work.
 
-### Second-game validation: Wonder
+### Historical non-FIFA validation
+
+This subsection preserves a general scanner/streaming experiment. It does not
+add a product profile or describe a current Touchline 23 packaging recipe.
 
 The second game tried in this pipeline (Super Mario Bros. Wonder) has a separate
 record in the fork's development history: its actual input version, the complete

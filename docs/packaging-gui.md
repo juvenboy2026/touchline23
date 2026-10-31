@@ -1,6 +1,6 @@
 # Touchline 23 Packaging
 
-[简体中文](packaging-gui.zh-CN.md) · [README](../README.md) · [Launcher and UI record](launcher-and-packaging-ui.md)
+[简体中文](packaging-gui.zh-CN.md) · [README](../README.md) · [Launchers and interface](launcher-and-packaging-ui.md)
 
 `scripts/build_packaging_gui.py --output <dir>` builds
 **Touchline23Packaging.app**. It does with clicks what `scripts/build-mac.sh` and
@@ -45,10 +45,10 @@ are the user's step.
    publication checks the command-line scripts use. Targets run in order; a
    failure or a cancel stops the batch.
 
-**Supported Games…** lists the bundled profile — there is one, FIFA 23 Legacy
-Edition — with its Title ID and registered versions, searchable by name, Title ID
-or version. Listing a profile does not certify a cold Shader build or a device
-run; the actual build checks do that.
+The window directly shows FIFA 23 Legacy Edition, base 1.0.0 and optional update
+1.0.3. There is no game browser/search/sort and no DLC input for this profile.
+Legacy saved add-on paths are cleared at startup; shared CLI/resource support is
+retained. Version registration is not a new gameplay validation.
 
 ## Shaders and caches
 
@@ -81,13 +81,12 @@ appears. Tasks, extracted code, intermediates and DerivedData stay on the cache
 disk; success removes the work, failure keeps small redacted diagnostics unless
 you choose otherwise. Logs and history: `~/Library/Logs/Touchline23Packaging`.
 
-FIFA 23's Switch release ships no add-on content, and external-mode artifacts
-carry none in any case: after installing, a DLC NSP dropped into the game folder
-is verified and mounted as its own read-only filesystem by the host, never
-overlaid onto the base RomFS. Loose NSO/NRO executables inside such a container
-are reported as needing module collection and rewriting; a container that needs
-new Shaders still needs matching libraries, not a certificate. Compressed NSZ
-must be converted to NSP first.
+The dedicated FIFA workflow does not request DLC. Shared add-on filesystem code
+and its synthetic tests remain engine facilities, not a promise of FIFA DLC
+compatibility. Compressed NSZ inputs must be converted to NSP before this workflow.
+External artifacts contain rewritten program modules and derived libraries even
+though containers, keys and RomFS stay external; they are not automatically safe
+to redistribute.
 
 Unknown versions, a control version that contradicts the code ID, unsupported
 graphics audits, missing sources, invalid caches and dependency failures stop

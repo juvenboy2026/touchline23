@@ -2,6 +2,25 @@ import XCTest
 @testable import PackagingModel
 
 final class ConfigurationTests: XCTestCase {
+    func testSingleGameUIRestoresInputsWithoutLegacyDLC() throws {
+        var original = Configuration()
+        original.base = "/game/base.xci"
+        original.update = "/game/update.nsp"
+        original.keys = "/game/prod.keys"
+        original.targets = ["macos", "ios"]
+        original.mode = "directory"
+        original.cache = "/game/cache"
+        original.aoc = "/game/legacy-aoc"
+        var restored = try JSONDecoder().decode(Configuration.self, from: JSONEncoder().encode(original))
+        restored.prepareForSingleGameUI()
+        XCTAssertTrue(restored.aoc.isEmpty)
+        XCTAssertFalse(restored.arguments(action: "check").contains("--aoc"))
+        original.aoc = ""
+        XCTAssertEqual(restored, original)
+        restored.mode = "nsp"
+        XCTAssertTrue(restored.capabilityIssue == nil)
+    }
+
     func testModeSwitchDoesNotForwardInactiveBundledPaths() {
         var c = Configuration()
         c.mode = "directory"; c.aoc = "/game/aoc"; c.romfs = "/game/RomFS"

@@ -1,6 +1,6 @@
-# Touchline 23 打包工具
+# Touchline 23 Packaging
 
-[English](packaging-gui.md) · [项目说明](../README.zh-CN.md) · [启动器与界面记录](launcher-and-packaging-ui.md)
+[English](packaging-gui.md) · [项目说明](../README.zh-CN.md) · [启动器与界面](launcher-and-packaging-ui.md)
 
 `scripts/build_packaging_gui.py --output <目录>` 构建
 **Touchline23Packaging.app**：把 `scripts/build-mac.sh` 与 `scripts/build-ios.sh`
@@ -36,9 +36,9 @@ Bundle 是只读输入，缓存与中间文件另存。
    “技术详情”默认折叠。“开始打包”调用与命令行脚本相同的引擎、打包器、产物审计与
    发布校验；双平台依次执行，失败或取消会停止后续目标。
 
-“支持的游戏…”列出内置的 profile——这里只有一个，即 FIFA 23 遗产版——可按名称、
-Title ID 或登记版本搜索。列入目录不代表首次 Shader 生成或设备运行已经验证，那是
-实际构建校验的事。
+窗口直接显示 FIFA 23 Legacy Edition、本体 1.0.0 和可选的 1.0.3 更新，不再提供游戏浏览、
+搜索、排序或本 profile 不适用的 DLC 输入。启动时会清除旧设置中残留的追加内容路径；
+底层 CLI 和共享资源系统仍保留原能力。登记版本不代表新增的游玩验证。
 
 ## Shader 与缓存
 
@@ -63,10 +63,9 @@ Title ID 或登记版本搜索。列入目录不代表首次 Shader 生成或设
 缓存磁盘的任务目录；成功后清理，失败时保留小型脱敏诊断。日志与历史位于
 `~/Library/Logs/Touchline23Packaging`。
 
-FIFA 23 的 Switch 版本不含追加内容，外置模式的产物也不携带任何游戏数据：安装后把
-DLC NSP 放进所选游戏文件夹，宿主会校验并把它挂载为独立的只读文件系统，不会覆盖本体
-RomFS。容器内若带真正的 NSO/NRO 程序模块，会明确要求收集与重写；新增的 Shader 仍需
-补齐对应库，而不是伪造覆盖证明。压缩 NSZ 必须先转换为 NSP。
+FIFA 专用流程不要求选择 DLC。共享追加内容文件系统及其合成测试仍然保留，但不表示
+本项目验证过 FIFA DLC。压缩 NSZ 需要先转为 NSP。
+外置模式虽然不内置容器、密钥或 RomFS，仍包含重写后的程序与派生库；不能因此认定产物可以公开分发。
 
 版本未知、控制数据版本与代码 ID 矛盾、图形审计不支持、来源缺失、缓存无效或依赖失败
 都会明确停止打包。本 profile 使用 NVN；引擎中的 GL 与 Vulkan 路径存在，但这里没有

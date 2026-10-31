@@ -1,11 +1,12 @@
 # Third-party notices
 
-Touchline 23 is a single-game snapshot of nxnative through
-[ohxiaoguang/nxnative-zzg](https://github.com/ohxiaoguang/nxnative-zzg), not an
-independent implementation of the entire engine. The original seedds MIT notice
-in [LICENSE](LICENSE) is retained. Kernel/service emulation, NVN/Metal, translation,
-rewriting and substantial packaging/tooling retain upstream authorship.
-[UPSTREAM.md](docs/UPSTREAM.md) identifies the snapshot and project-specific work.
+Touchline 23 builds on [nxnative](https://github.com/seedds/nxnative) and retains
+its original seedds MIT notice in [LICENSE](LICENSE). Kernel/service emulation,
+NVN/Metal, translation and rewriting retain their original authorship. FIFA 23
+adaptations, resource integration and packaging also include work developed by
+the maintainer on that engine and now maintained in this independent project;
+these additions are not all credited to the original official upstream.
+[UPSTREAM.md](docs/UPSTREAM.md) records the accurate inheritance and evidence limits.
 The root MIT grant does not replace other components' terms or grant rights to
 game content, keys, firmware or third-party assets.
 

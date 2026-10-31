@@ -1,122 +1,87 @@
-# Where this tree comes from
+# Project origin and attribution
 
-Touchline 23 is not a fork that keeps its history; it is a snapshot of
-`ohxiaoguang/nxnative-zzg` reduced to one game and renamed. This page records the
-exact source so a later update can be compared against it.
+Touchline 23 is an independently maintained project for **FIFA 23 Legacy Edition**
+on Apple silicon macOS, iOS and iPadOS. Its public upstream is
+[nxnative](https://github.com/seedds/nxnative); its home and release history are
+[ohxiaoguang/touchline23](https://github.com/ohxiaoguang/touchline23).
+No private repository is required to build or run the published source.
 
-## The snapshot
+## Engine and FIFA adaptation
 
-| | |
-| --- | --- |
-| Repository | `https://github.com/ohxiaoguang/nxnative-zzg` |
-| Branch | `main` |
-| Commit | `6dcf9868582388173f81f4f02385cd4cdb125b3e` |
-| Commit date | 2026-10-29 13:16:58 +0800 |
-| Commit subject | Restore GL uniform defaults to fix combat recovery flicker |
-| Taken | 2026-10-31 (`git clone`, then the history was dropped: `rm -rf .git && git init -b main`) |
+The inherited nxnative engine provides native ARM64 execution, kernel/service
+emulation, program rewriting, NVN-to-Metal translation, graphics infrastructure
+and platform integration. Original author notices and the seedds MIT grant remain.
+This project does not claim to have written those components from scratch.
 
-The upstream lineage above that commit is `seedds/nxnative`, the original
-project: the Switch kernel and service emulation, the NVN → Metal and Vulkan →
-Metal backends, the GL layer, the Shader translation chain and the game ports are
-its work. `nxnative-zzg` added the packaging engine, the resource reader and the
-FIFA 23 bring-up. This project keeps the MIT license and the third-party notices
-(`dm/third_party/`) that came with them.
+FIFA 23 bring-up, EA EASF archive handling, descriptor/indirect-read compatibility,
+audio corrections, the external-container resource path and packaging work were
+developed on that engine in the maintainer's earlier development line. They are
+retained and maintained here, not all attributed to official nxnative. Technical
+decisions and scoped evidence are in the [FIFA notes](fifa23/README.md) and
+[historical integration record](fifa23/migration.md).
 
-The publication remote is `origin` at `ohxiaoguang/touchline23`. The
-[publication audit](fifa23/public-audit.md) records the resolved notice/provenance
-review and the checks required for the initial source publication.
+The imported development snapshot is identified by commit
+`6dcf9868582388173f81f4f02385cd4cdb125b3e` (2026-10-29). This is a historical
+maintainer-source identifier, **not a claim of a direct clone from an official
+nxnative commit with that SHA**. Detailed private checkout/migration records are
+maintainer material. The independent public history begins at
+`81cfdd50cb4e85f768b648c54b3ee9173ae7929b`; those earlier source IDs are not
+revision ranges in this repository.
 
-## What changed on top of the snapshot
+## Independently maintained product
 
-Everything else is upstream code, unchanged:
+The current project carries one profile, `dm/games/01001C8016B4E000`, with the
+registered 1.0.0 and 1.0.3 builds. It supplies single-game build wrappers,
+Touchline 23 branding and original icon artwork, a dedicated packaging UI,
+bilingual launchers and About pages, resource selection and user/developer guides.
+The App identity is `com.ohxiaoguang.touchline23`; the tool is
+`com.ohxiaoguang.touchline23.packaging`.
 
-- **One profile.** `dm/games/01001C8016B4E000/` is the only game; the other 59
-  profiles and their tables are gone. The profile gained a `bundle_id` row and
-  its App name, IPA name and icon are Touchline 23's.
-- **Names.** The App, the launcher, the packaging GUI and their user-facing
-  strings say Touchline 23; the bundle identifiers are
-  `com.ohxiaoguang.touchline23` (App) and `com.ohxiaoguang.touchline23.packaging`
-  (GUI). Logs and run directories are named after the App.
-- **Darkest Dungeon's adaptation removed.** `dm/host/dd_pointer.h`,
-  `hle_dd_pointer_mac.c` and their tests, the MOD-metadata notes and the research
-  script for that game are gone. Nothing else about MODs changed.
-- **Build entry point.** `scripts/build-mac.sh`, `scripts/build-ios.sh` and
-  `scripts/touchline_build.py` replace the multi-game command lines: one game, no
-  picker, no title ID to type, and every stage can reuse a previous run's output.
-- **Other builds' rewriter cuts.** `dm/tools/sdk_patches.py` kept one entry per
-  Nintendo SDK build some other game shipped; this game's `main` and `sdk` need
-  no cut, so the table is empty and the file keeps its form and its test. Take an
-  entry from upstream only for a build this tree actually ships, after checking
-  it by disassembly.
-- **Docs.** The single-game guides in `docs/`; the other games' pages, the
-  gallery and the research records were dropped. The FIFA 23 notes are kept
-  because they explain why the port looks the way it does.
-- **Icon.** `assets/app-icon/` holds the project's own icon and the script that
-  draws it; no game artwork is used.
+Shared engine facilities and their tests remain where useful. Their presence is
+not support for another game; no other profile should be introduced automatically.
 
-## Following upstream later
+## Third-party source and translator provenance
 
-The tree has no upstream remote on purpose: a `git pull` would bring back 59
-profiles and reintroduce the names. Compare by hand instead.
+[THIRD_PARTY_NOTICES](../THIRD_PARTY_NOTICES.md) indexes original licenses,
+notices, authors and the boundaries of this project's MIT grant. Those texts must
+remain intact. Ryujinx/Spv.Generator, libvpx, stb, MacNativeGames, deko3d, Vulkan
+headers and other components retain their own authorship and applicable terms.
 
-```sh
-git clone https://github.com/ohxiaoguang/nxnative-zzg /tmp/nxnative-zzg
-cd /tmp/nxnative-zzg
-git log --oneline 6dcf9868582388173f81f4f02385cd4cdb125b3e..origin/main
-```
+The retained translator's [runtime review](../dm/third_party/translator-runtime/README.md)
+records exact package identities, producer commit, source tree and per-file hashes.
+Original-source Git comparisons were performed by the maintainer; some original
+objects are not publicly browsable. Public reference evidence, copied original
+license texts and the full hash manifests remain available. This is source/build
+traceability, not an independently reproduced historical compiler invocation.
+The public documentation does not replace unavailable evidence with unrelated
+upstream SHAs or claim that private historical logs are public tests.
 
-For one of those commits, or for everything since the snapshot:
+## Following nxnative fixes
 
-```sh
-# what changed in the engine, the graphics chain and the tools
-git diff 6dcf9868..origin/main -- dm/host dm/gfx dm/tools dm/resource dm/apple dm/macos dm/ios > engine.patch
-# what changed in this game's profile (shader tables, build rows, patches)
-git diff 6dcf9868..origin/main -- dm/games/01001C8016B4E000 > profile.patch
-```
+Review general fixes from [the public upstream](https://github.com/seedds/nxnative)
+in a separate checkout. Compare the affected semantics and source; bring across
+selected changes with attribution and appropriate local tests. This tree does not
+share the upstream repository's complete history, so do not copy historical Git
+range or three-way merge commands that assume its objects exist here.
 
-Apply the engine patch in this tree with `git apply --3way engine.patch` and
-resolve the hunks that touch renamed strings (`Touchline 23` where upstream says
-`nxnative`), the removed Darkest Dungeon hooks, or `scripts/` (this tree's build
-script is its own). The profile patch usually applies without trouble; check the
-`bundle_id` and `app_name` rows survive.
+Prefer Horizon/NVN/SDK semantics and binary evidence over game-name branches.
+Fixed addresses must be gated by the exact NSO build ID and rechecked by disassembly
+when a new build appears. Preserve the single-game profile, names and bundle IDs.
+A generic fix must not restore unrelated profiles or change FIFA settings silently.
 
-Then, as with any chain change upstream:
+Only a deliberate translator/tool or profile-input change warrants new Shader
+libraries. For chain changes follow [AGENTS.md](../AGENTS.md): regenerate the chain
+header, rebuild both platform libraries with matching stamps, then rebuild the
+host. Documentation and launcher-only edits reuse the existing libraries.
 
-1. If `dm/gfx/tools/dmsh_*` changed, run `dm/gfx/tools/dmsh_chain.py --header`
-   and commit the new `dm/gfx/nvn/dmsh_chain.h`; the chain version in the header
-   is what the host and the Shader libraries agree on.
-2. Rebuild the game's Shader libraries with `dmsh_build.py` (the build scripts do
-   it when no library is given), or point `--shaders` at the old library and let
-   the tool refuse it if the chain moved.
-3. Rebuild the App or the IPA and play.
+## Build and publication boundary
 
-Per-build knowledge — rewriter cuts, observation gates, frame-step stubs — lives
-in the profile's `patches.py` and in `dm/tools/sdk_patches.py`, keyed by NSO
-build ID. A new game build needs those addresses carried over with
-`dm/tools/nso_fnmap.py` and checked by disassembly before they are used; never
-let them run on a build they were not found in. See
-[the build notes](fifa23/build.md).
+Build with the [documented local tools](fifa23/build.md) and user-supplied inputs.
+No game, key, extracted module, generated Shader, App/IPA, save or raw diagnostic
+belongs in the source commit. The [publication audit](fifa23/public-audit.md)
+records the retained binaries' clearance and the checks for later changes.
 
-## Upstream files kept as they were
-
-`LICENSE`, `dm/third_party/`, the notices inside `dm/gfx/tools/` and the
-authorship comments in the engine are untouched. If a later sync restores a file
-this project deleted, that is upstream's copy, not a merge of somebody else's
-code.
-
-## Publishing the source tree
-
-`origin` is `https://github.com/ohxiaoguang/touchline23.git`, the branch is `main`,
-and the local identity is `ohxiaoguang` with the account's GitHub noreply email and
-`user.useConfigOnly=true`. Do not override upstream authorship or global settings.
-
-The [publication audit](fifa23/public-audit.md) closes the former translator notice
-and source-origin blockers. Before any later release, review the exact Git index,
-run the content checks and tests, inspect all manual findings and verify the chain.
-Normal `git push -u origin main` publishes only reviewed commits; build products
-and private game inputs remain outside Git. Do not force push or rewrite history.
-
-The [third-party index](../THIRD_PARTY_NOTICES.md) and translator
-[provenance materials](../dm/third_party/translator-runtime/README.md) must remain
-with the published source. Traceability does not assert an independently reproduced
-historical compiler invocation or permission to distribute game-derived artifacts.
+Use local tests and source review; this project does not use GitHub Actions.
+Keep the existing `main` history, repository-local author identity and normal
+push workflow. Source publication does not authorize distribution of proprietary
+material embedded in locally built artifacts.

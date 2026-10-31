@@ -34,8 +34,8 @@ records, not from this build.
 
 The shared view is `dm/apple/AboutTouchline.swift`, presented from the settings
 areas of `dm/ios/Sources/Launcher.swift` and `dm/macos/Launcher.swift`. It follows
-the existing `LanguagePreferences` and central localization catalog. The iOS form,
-icons, links and disclaimer match the Touchline 27 reference; macOS uses a native
+the existing `LanguagePreferences` and central localization catalog. The iOS form uses native
+navigation, icons and links with the shared disclaimer; macOS uses a native
 sheet and default-action Done button. No telemetry/update checks were added.
 
 - Both build wrappers completed using existing rewritten modules and the existing
@@ -77,12 +77,13 @@ The iPhone's original failure report identifies iPhone18,4, iOS 27.0.1 and 8 GB
 memory. Detailed post-fix captures and automated counters are not published here;
 feature confirmation is user feedback, not a comprehensive device matrix.
 
-The latest feature report is
-[ee6d92e](https://github.com/ohxiaoguang/nxnative-zzg/commit/ee6d92ea057566157686699c77db5da8f8baef74).
-The [memory-layout fix](https://github.com/ohxiaoguang/nxnative-zzg/commit/e8b40e0749aba67a656ae923595cd2fd62a68d91)
-also records iPhone matches after the change. These supersede the earlier
-"awaiting signed reinstall" conclusions. Detailed Mac shadow evidence must not be
-extended to full iPhone shadow validation.
+Historical maintainer records identify the feature report as
+`ee6d92ea057566157686699c77db5da8f8baef74` and the memory-layout correction as
+`e8b40e0749aba67a656ae923595cd2fd62a68d91`. These source IDs belong to the earlier
+non-public development line, not this repository's Git history or publicly
+retrievable test logs. The platform results above are retained reports with their
+stated scope. They supersede the earlier awaiting-reinstall status; detailed Mac
+shadow evidence must not be extended to full iPhone shadow validation.
 
 ## Reproducible build evidence
 

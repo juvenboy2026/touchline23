@@ -1,171 +1,154 @@
 # Touchline 23
 
-[简体中文](README.zh-CN.md) · [How the port works](docs/fifa23/README.md) · [Upstream record](docs/UPSTREAM.md) · [Packaging GUI](docs/packaging-gui.md)
+[简体中文](README.zh-CN.md) · [Packaging guide](docs/packaging-gui.md) · [Compatibility](docs/fifa23/compatibility.md)
 
-Touchline 23 is a native Apple-silicon port of one game: **FIFA 23 Legacy Edition** for
-Nintendo Switch, title ID `01001C8016B4E000`. The game's own ARM64 code runs; the
-kernel services, the filesystem, the audio output and the GPU API (NVN) are
-reimplemented for macOS and iOS, so there is no Switch emulator and no ROM
-translation beyond what Apple's kernel requires.
+Touchline 23 runs the Nintendo Switch version of **FIFA 23 Legacy Edition**
+natively on Apple silicon, with launchers for **macOS, iOS and iPadOS**. It is an
+independently maintained, single-game project. The game's ARM64 code runs with
+host implementations of the services, graphics, audio and input it needs.
 
-It is a single-game project built on [nxnative](https://github.com/seedds/nxnative)
-through the fork [ohxiaoguang/nxnative-zzg](https://github.com/ohxiaoguang/nxnative-zzg).
-The execution architecture, the graphics backends and the original ports are
-upstream work; see [provenance](docs/UPSTREAM.md) for the exact commit this tree
-was taken from.
+You supply your own game files and console keys. This repository contains source,
+compatibility metadata and build tools; it does not include the game, keys or
+ready-to-distribute game resources.
 
-## The game it runs
+## Get started
 
-| | |
+1. Prepare your own base XCI/NSP and `prod.keys`, plus the optional 1.0.3 NSP update.
+2. Build `Touchline23.app` or an unsigned `Touchline23.ipa` using the commands
+   below, or use **Touchline 23 Packaging** for a graphical workflow.
+3. On macOS, choose the resource folder in the launcher. On iPhone/iPad, place the
+   files in the App's Documents folder using Files; subfolders are scanned too.
+4. Check the identified resources, select the interface/game language and console
+   mode, then start the game. The settings also contain **About Touchline 23**.
+
+IPAs require your own signing and sideloading setup. Source publication is not
+permission to redistribute the game code or derived assets inside local builds.
+
+## Platforms and current status
+
+| Platform / feature | Evidence and scope |
+| --- | --- |
+| Apple silicon, macOS 26+ | Menus and formal matches tested on MacBook Air M1 |
+| iPhone, iOS 26+ | User-reported gameplay on iPhone Air; the current App/IPA also passes build/static checks |
+| iPad, iPadOS 26+ | Shared iOS UI and package target; no separate iPad gameplay record |
+| Handheld / docked, audio and commentary, crowds, indicator, 2D/3D Radar, saves | Mac evidence and iPhone feedback in the validation records |
+| Touch controls and gamepad | iPhone user testing; controller coverage remains limited |
+| Dynamic player shadows | Formal-match projections and targeted GPU checks on Mac; detailed iPhone comparison remains incomplete |
+| macOS MOD overlay | Optional resource-folder overlay with synthetic tests; compatibility of individual FIFA MODs is not certified |
+| Bilingual launchers / About page | English and Simplified Chinese; macOS About interaction tested, iOS compiled but About not device-tested |
+
+[Compatibility](docs/fifa23/compatibility.md) and [validation](docs/fifa23/validation.md)
+separate gameplay, user feedback, build audits and automated tests. New builds are
+not automatically new gameplay validations.
+
+## Game versions and resource modes
+
+| Item | Value |
 | --- | --- |
 | Game | FIFA 23 Legacy Edition (Nintendo Switch) |
 | Title ID | `01001C8016B4E000` |
-| Base game | 1.0.0 (`v0`) |
-| Update | 1.0.3 (`v196608`), optional |
-| Shader chain | `a885c56c665a` (`dm/gfx/nvn/dmsh_chain.h`) |
+| Base | 1.0.0 (`v0`), also the Shader source version |
+| Optional update | 1.0.3 (`v196608`), the version covered by gameplay records |
+| App / bundle identity | Touchline 23 / `com.ohxiaoguang.touchline23` |
 
-The base game and the update are two different builds of the same program: the
-update needs its own RomFS, its own `main` and `sdk` and its own rewritten
-modules. Never mix an updated RomFS with base code. The Shader library is built
-from the base game's EASF archives and stays valid for both versions, because the
-updates add no new shaders; the profile records both builds it was brought up on.
+Keep code and resources from the same game version. A registered 1.0.0 build is
+not a claim of the same gameplay coverage as 1.0.3.
 
-## Platforms
+**External XCI/NSP (default):** the launcher verifies matching files and reads the
+containers in place. Game containers, keys and RomFS stay outside the artifact.
+The App still contains rewritten program modules and derived Shader libraries.
 
-- **macOS 26 or later on Apple silicon** — the App is a plain `.app`; it reads the
-  game from a folder you choose and keeps saves, logs and temporary files in that
-  folder (inside `Touchline23/`).
-- **iPhone and iPad, iOS 26 or later** — the build is an unsigned `.ipa` you sign
-  and sideload yourself. iOS gives an App no access to the filesystem outside its
-  own container, so on iOS the game files live under the App's `Documents`
-  folder (any sub-folder, any depth).
+**Directory:** the packaging GUI and lower-level build tools can prepare and
+bundle RomFS. The resulting artifact is much larger and fixed to those resources.
+See the [packaging guide](docs/packaging-gui.md). There is no DLC selector for this
+FIFA profile.
 
-Both platforms need a device with the memory a modern football game asks for:
-the host reserves a 5 GiB guest address region at startup and a match runs with
-roughly 2.8 GiB resident. Devices with 6 GB or more are the practical target.
+On macOS, choose saves/log storage separately in launcher settings. On iOS,
+saves and diagnostics remain in the App container; preserve them before reinstalling.
 
-## Game files you supply
+## Build from source
 
-Nothing in this repository is game data. You need your own copy of the game:
-
-- a base `.xci` or `.nsp` dump of `01001C8016B4E000`,
-- optionally the 1.0.3 update `.nsp`,
-- your console's `prod.keys`.
-
-**External resources (default).** The launcher asks for one folder. It scans the
-folder and its sub-folders, identifies the base and the update by their contents,
-checks them against the module IDs the App was built for, and reads the
-containers in place — no extraction, no copy, no rename. The App and the IPA
-carry no game container, no keys and no RomFS.
-
-**Directory mode.** The RomFS is unpacked once and bundled into the App, which
-then needs nothing else. Artifacts are much larger and the game version is
-frozen at build time. Use it when you want a self-contained App.
-
-## Build
-
-Requirements: Apple silicon Mac, Xcode 26 (Metal toolchain, `swiftc`, `iconutil`),
-.NET 10, `spirv-cross`, `xcodegen` for iOS, and a Python 3 with `capstone`,
-`lz4`, `fontTools` and `pycryptodome` (the rewriter and the EASF tools use them).
+Use an Apple silicon Mac with Xcode and its Metal toolchain, .NET 10,
+SPIRV-Cross, Python dependencies and XcodeGen for iOS. The validated tool versions,
+locked fingerprints and dependency installation are in the [build guide](docs/fifa23/build.md).
+The published checkout contains the project source needed for these builds.
 
 ```sh
 ./scripts/build-mac.sh --nsp-dir "/path/to/your/fifa23-folder"
 ./scripts/build-ios.sh --nsp-dir "/path/to/your/fifa23-folder"
 ```
 
-The folder holds the base container, the optional update and `prod.keys`; the
-script identifies which is which. Artifacts land in `Release/` as
-`Touchline23.app` and `Touchline23.ipa`.
+Outputs: `Release/Touchline23.app` and `Release/Touchline23.ipa`. These wrappers
+build external-resource artifacts. Work defaults to ignored `build/work`; keep
+private game inputs, keys and extraction/analysis work on the game drive.
 
-Both scripts run the same stages, and each can reuse what an earlier run made:
+Reuse existing work when rebuilding the host or launcher:
 
-| Stage | Option to skip it |
+| Prepared input | Option |
 | --- | --- |
-| ExeFS and control data (`nx_extract`, program only) | `--exefs <ExeFS folder>` |
-| Rewritten `main` and `sdk` (`dm/tools/patch_nso.py`) | `--patched <build/patched>` |
-| Metal Shader libraries (`dmsh_build.py`, macOS and iOS) | `--shaders <dir with b-a885c56c665a>`, `--ios-shaders <same for iOS>` |
-| Prepared EASF package | `--shader-pack <pkg>` |
+| ExeFS | `--exefs <folder>` |
+| Rewritten main/sdk | `--patched <folder>` |
+| macOS and iOS Shader libraries | `--shaders <folder>` / `--ios-shaders <folder>` |
+| EASF source package | `--shader-pack <pkg>` |
 
-`--work` names the work directory (default `build/work`), `--out` the artifact,
-`--app-name`, `--version`, `--language`, `--show-fps` and `--icon` change what
-the launcher shows. `./scripts/build-mac.sh --help` lists everything.
+The base's 386 programs produce **520 libraries per platform**; update 1.0.3 adds
+no Shader. Libraries must match chain `a885c56c665a` and this profile's input stamp.
+Reuse valid caches; do not regenerate them for unrelated UI/documentation changes.
+`./scripts/build-mac.sh --help` lists work/output and other options.
 
-A Shader library is only accepted when its `inputs.tsv` names this profile's
-inputs, so a library from another game, another profile revision or another
-chain version is refused rather than silently linked. Building the 520
-libraries from scratch takes a long time; a second build reuses the first.
+## Touchline 23 Packaging
 
-### The packaging GUI
+A dedicated bilingual SwiftUI tool for this game: choose macOS/iOS or both, select
+External XCI/NSP or Directory, check resources, review the build, follow progress
+and collect audited artifacts. Shader caches, error diagnostics and cancellation
+remain available; there is no game browser or unnecessary DLC input.
 
-`scripts/build_packaging_gui.py --output <dir>` builds **Touchline 23
-Packaging**, a SwiftUI App that does the same work with clicks: choose the game
-folder, check the configuration, watch the log, collect the App or the IPA. It
-carries its own Python, the reader, the extractor and the profile, so it can be
-moved anywhere. See [the guide](docs/packaging-gui.md).
+Build the tool with `scripts/build_packaging_gui.py --output <new-directory>`.
+The [English guide](docs/packaging-gui.md) explains bundled dependencies, disk use,
+output safety and building the tool from source.
 
-## What has been verified
+## Limits
 
-Records are kept per feature; a Mac check is not an iPhone check and an IPA
-audit is not gameplay. Details and their evidence are in
-[compatibility](docs/fifa23/compatibility.md) and
-[validation](docs/fifa23/validation.md).
+- There is no stable-60-FPS guarantee. This profile exposes no 30/60-FPS toggle;
+  the shared engine's diagnostic pacing variables are not a validated FPS patch.
+- Startup reserves 5 GiB of guest address space. Historical matches used roughly
+  2.8 GiB resident memory; these are observations, not universal device requirements
+  or a guarantee against iOS jetsam. The recorded iPhone has 8 GB RAM.
+- Venue, weather, special-scene and long-session coverage remains incomplete.
+  Loading can underrun audio; some services still report `[RED]` diagnostics.
+- Online play and Switch network services are outside the supported scope.
+- No Intel Mac support or separately validated iPad/device matrix is claimed.
 
-| Feature | State |
-| --- | --- |
-| Native boot into the menus and into a match | Works, Mac and iPhone |
-| Handheld and docked | Both reported working |
-| Players, pitch, stadium, lighting, crowd | Render normally in the tested scenes |
-| Match sound, crowd, commentary | Works, Mac and iPhone |
-| Player indicator, 2D / 3D Radar | Works |
-| Saves | Work; a match resumes from a save |
-| iOS touch controls and gamepad | Work |
-| Dynamic player shadows | Fixed; formal-match projections captured on Mac |
-| Sideline staff (photographers, security, flag carriers) | Visible in the observed scenes |
+## Development and local checks
 
-## Known issues and limits
-
-- Venue, weather, special-scene and long-session coverage is incomplete, and
-  iPad play has no separate record yet.
-- iOS physical memory is its own limit: the 5 GiB address reservation is not a
-  promise about jetsam. A build signed without the Increased Memory Limit
-  entitlement can still be killed in heavy scenes.
-- Frame times in the recorded samples approach 60 fps with occasional long
-  frames; no stable-60-fps claim is made.
-- Loading screens can under-run audio, and a few diagnostic service calls are
-  still unimplemented (the log shows `[RED]` lines for them).
-- Online features, amiibo, and the Switch's own network services are outside
-  what this port provides.
-- The IPA is unsigned; signing and installation are the user's step.
-
-## Layout
-
-| Path | Purpose |
-| --- | --- |
-| `dm/host/` | The host: kernel services, NVN → Metal, audio, filesystem, input |
-| `dm/gfx/` | Shader translation chain and its tools (`dmsh_*`) |
-| `dm/games/01001C8016B4E000/` | The game profile: constants, shader tables, build rows |
-| `dm/tools/` | Rewriter, extractor, profile helpers |
-| `dm/macos/`, `dm/ios/`, `dm/apple/` | Launchers, platform glue and the iOS project |
-| `gui/`, `tools/packaging_gui/` | The packaging App and the engine behind it |
-| `scripts/` | The commands a user runs |
-| `docs/` | Guides, the port's notes and the validation records |
-
-## Tests
+[Graphics](dm/gfx/README.md), [profile format](dm/games/README.md),
+[extraction](docs/agents/01-extract.md) and [debugging](docs/agents/05-debugging.md)
+describe the development workflow. Tests run locally; this project has no GitHub
+Actions workflows.
 
 ```sh
-python3 -m unittest discover -s scripts/tests            # build scripts, packaging, profiles
-make -C dm/host/tests GAME=01001C8016B4E000 run          # host units on this Mac
-python3 -m unittest discover -s dm/resource/tests        # the container reader
-DM_GAME=01001C8016B4E000 python3 -m unittest discover -s dm/gfx/tests
-cd gui && swift test                                      # the packaging App's model
+python3 -m unittest discover -s scripts/tests
+python3 scripts/check_markdown_links.py
+python3 scripts/check_fifa23_public.py
+swift test --package-path gui
 ```
 
-The Python suites run without game files. Building a real App or IPA is a
-separate step, and only running it on a device says whether the game plays.
+The conservative publication scanner still requires manual disposition of known
+third-party file types; see the [source audit](docs/fifa23/public-audit.md).
+[Build and regression notes](docs/fifa23/build.md#regression-checks) list additional
+resource/GPU tests and their fixture requirements.
 
-## License
+## Credits and licenses
 
-MIT, see [LICENSE](LICENSE). nxnative and its contributors keep their
-authorship; third-party notices are in `dm/third_party/`. This repository
-distributes no game code, game data, keys, fonts, artwork or built Shader
-libraries. The App icon is drawn by `assets/app-icon/make_icon.swift`.
+Touchline 23 is based on [nxnative](https://github.com/seedds/nxnative) and the work
+of its authors and contributors. FIFA 23 compatibility, graphics/resource
+adaptations and independent packaging were developed on that engine and are
+maintained here. These additions are not attributed to the original upstream as
+if it authored all of them. See [project origin](docs/UPSTREAM.md).
+
+The original [MIT license](LICENSE) and author notices are retained. Dependencies
+keep their own terms, including Apache-2.0 for MsgPack; [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES.md)
+indexes the full materials. The project icon is original generated artwork.
+Touchline 23 is not affiliated with or endorsed by EA SPORTS, Nintendo or Apple.
+
+[Official repository](https://github.com/ohxiaoguang/touchline23) · [Report an issue](https://github.com/ohxiaoguang/touchline23/issues)

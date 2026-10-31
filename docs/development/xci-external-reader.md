@@ -186,24 +186,26 @@ impact was not measured and cannot be inferred from these numbers.
   1 MiB is not hash-verified at open (no such retail case observed).
 - No DLC from an XCI (unchanged: DLC NSP mounting is not implemented in any mode).
 
-## 10. Git
+## 10. Historical source identity
 
-- `a07febd` feat(resource): read gamecard (XCI) images directly through the
-  external-resource mount (code, tests, docs)
-- plus this report commit on `feature/xci-external-reader`. Not merged, not pushed.
+The original reader implementation is recorded as `a07febd` in the earlier
+maintainer development line. That ID and the original baseline `d1fd026` are
+historical source evidence, not commits or branch instructions for this independent
+repository. No current merge/unpushed status is implied.
 
-## 11. Merging to a newer main
+## 11. Current maintenance
 
-`d1fd026`-based branch; expected conflict sites are the same ones the NSP work
-flagged (`hle_fs.c` — untouched here, `scripts/build_ipa_from_nsp.py`,
-`tools/nxrom/*`, `dm/resource/tests/*`, `docs/development/external-nsp.md`).
-Procedure: rebase/merge main into this branch, re-run `make -C dm/resource/tests
-run GAME=010015100B514000` plus the venv test files, rebuild the host, then merge
-with review. The C core change is self-contained (`nxrom.c`), so an upstream
-`nxrom.c` update would conflict only in `nxrom_open()`'s opening block — resolve
-by keeping both the content detection and any upstream fixes.
+The former feature-branch merge recipe is obsolete. Follow this repository's
+[maintenance principles](../UPSTREAM.md#following-nxnative-fixes), use the current
+FIFA profile and select local resource tests with synthetic fixtures. The reader's
+content-detection and integrity contracts remain useful independent of the original
+other-title experiments. Preserve those contracts when importing a general fix.
 
-## 12. FIFA 23 EASF follow-up (out of scope here, recorded for the integration work)
+## 12. Historical FIFA EASF follow-up
+
+The following list describes the original reader task, before the dedicated EASF
+provider was integrated. It is not the current missing-feature list. Current
+External XCI/NSP and Directory recipes are in the [packaging guide](../packaging-gui.md).
 
 The XCI side is ready for it: FIFA 23's card mounts, enumerates and hash-verifies
 (§6/§7), and `.big`/`.cbac`/`.bh` assets are ordinary seekable streams through

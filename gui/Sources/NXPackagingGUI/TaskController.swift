@@ -60,10 +60,6 @@ final class Inspector: ObservableObject {
         }
     }
     @Published var showConfirmation = false
-    /// Whether the supported-games window is open. It lives here rather than in
-    /// a view `@State` so the window keeps its catalog across re-renders of the
-    /// content view.
-    @Published var showGames = false
     @Published var history: [BuildRecord] = []
     @Published var message: GUIText = "Choose a base game and prod.keys to identify the game."
     @Published var simulationMode = "logs"
@@ -116,6 +112,7 @@ final class Inspector: ObservableObject {
            FileManager.default.fileExists(atPath: resources.appendingPathComponent("Packaging/release.json").path) {
             initial.useBundle(resources)
         }
+        initial.prepareForSingleGameUI()
         configuration = initial
         executor = BuildExecutor(supervisorPython: initial.python, supervisorScript: Inspector.supervisor(initial))
         bindExecutor()
@@ -274,7 +271,7 @@ final class Inspector: ObservableObject {
         }
     }
 
-    // MARK: - Supported games
+    // MARK: - Optional profile metadata
 
     /// Why the list cannot be read yet, or nil when it can. Reading the registry
     /// needs an interpreter and the bridge, nothing else: no base game, no keys,

@@ -52,8 +52,9 @@ The correction's chain `fda6fe95693e` regenerated 520 libraries: 516 were
 byte-identical to the prior chain and four changed (two ptrfix programs and their
 vertex-input variants). The chain at that investigation stage, `7f2ec952af18`, also includes the
 independent [stage-interface fix](shader-fixes.md#runtime-vertexpixel-pairing).
-The pointer implementation is traceable to
-[d7d7fae](https://github.com/ohxiaoguang/nxnative-zzg/commit/d7d7fae).
+The historical maintainer implementation record is `d7d7fae` in the earlier
+non-public development line. It is not a revision in this independent repository
+or a publicly retrievable capture; the mechanisms and scoped controls are retained here.
 
 ## Same-process control
 

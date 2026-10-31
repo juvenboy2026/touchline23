@@ -36,11 +36,13 @@ notice copies remain byte-identical compatibility copies.
 ## Producer and source lineage: resolved
 
 The four source-backed DLLs and apphost are byte-identical to original development
-commit [674c2e141cf87917271858c455657aa8637f22d0](https://github.com/ohxiaoguang/nxnative-zzg/commit/674c2e141cf87917271858c455657aa8637f22d0),
+commit `674c2e141cf87917271858c455657aa8637f22d0`,
 which records rebuilding the translator from in-repository source and remeasuring
 the lock. Its parent is ffb3122026aa9aea4ffe35a1af54146cc7f19d04.
-The original repository may require authorized access; its Git objects were read
-locally without changing that repository. The public reference's R3 supplement is
+The producer Git objects are from the maintainer's non-public development record;
+they were read locally without changing that repository. The exact producer SHA,
+parent, source tree and blob identities are retained here. This is a maintainer-verified
+comparison, not a claim that those original objects are anonymously accessible. The public reference's R3 supplement is
 [linked here](https://github.com/ohxiaoguang/touchline27/blob/7ff172ea582dedea1f09cd4f3c98f681ca1c1cd0/docs/upstream-provenance.md#original-repository-investigation-r3-supplement).
 
 All **364 non-README source, project, configuration and license files** in the

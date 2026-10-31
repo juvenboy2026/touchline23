@@ -1,6 +1,12 @@
-# Migration scope and provenance
+# Historical FIFA integration record
 
-The previous local implementation used baseline
+This page records work predating the independent Touchline 23 public history.
+The source IDs below belong to the earlier development line and are retained
+as historical evidence, not as Git ranges to run in this repository. Current
+development starts from this repository's `main`; see [project origin](../UPSTREAM.md)
+and the [build guide](build.md).
+
+The previous implementation used baseline
 `51a3fb444287bd304629a497b2115f5c2146dd70`. This fork integrated its compatibility
 work onto upstream baseline `2f69480260068c0979ee42a1c31b420eecfd27e2`, preserving
 newer games, renderer threading, integer pixel outputs and launcher/packaging
@@ -19,12 +25,9 @@ current source tree.
 
 Later corrections add the full-pool pointer window, 5 GiB iOS layout and runtime
 FXO stage-interface closure. Their mechanisms and evidence live in the technical
-documents rather than a migration timeline. Current branch history is available
-with:
-
-```sh
-git log --reverse --oneline 2f69480260068c0979ee42a1c31b420eecfd27e2..main
-```
+documents rather than a migration timeline. These technical decisions are now maintained in Touchline 23. For the independent
+repository's changes use `git log --oneline main` or compare explicitly available
+local commits; do not use a baseline from the older source line as a local range.
 
 ## Integration boundaries
 
@@ -39,8 +42,8 @@ generation used only the primary entry. `dmsh_fetch.py` excludes that appended
 entry from tile rewriting; a synthetic test checks cold/cache parity. This is a
 general build fix rather than a per-game shader substitution.
 
-Other upstream profiles have not all been rebuilt or runtime-regressed after
-shared graphics/audio changes. FIFA external XCI/NSP loading is now connected by
+Shared graphics/audio findings do not certify the original engine's entire game list;
+Touchline 23 supports only its FIFA profile. FIFA external XCI/NSP loading is now connected by
 the dedicated EASF image/preparation path and GUI cache-reuse recipe. The generic
 NSP Shader scanner still does not replace that adapter. Both platform/resource
 recipes have scoped build/audit records; see the [GUI guide](../packaging-gui.md).

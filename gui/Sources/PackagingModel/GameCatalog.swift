@@ -1,6 +1,8 @@
 import Foundation
 
-/// One registered game profile, as the supported-games window shows it.
+/// A registered profile in the shared packaging report schema.
+/// Touchline 23 exposes one game directly; this schema remains for confirmation
+/// metadata and engine diagnostics, not a multi-game product selector.
 ///
 /// The payload comes from the generic registry (`tools/packaging_gui/registry.py`),
 /// so the list and the build engine describe a profile the same way. A profile's
