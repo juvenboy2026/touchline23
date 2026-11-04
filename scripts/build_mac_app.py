@@ -50,10 +50,17 @@ def resolve_backend(explicit, prepared, romfs):
 def info_plist(name, title_id, version, backend, bundle_id=None):
     """The App's Info.plist. NXResourceBackend is what the launcher and the host read."""
     identity = bundle_id or 'org.nxnative.%s.%s' % (title_id.lower(), backend)
+    # LSApplicationCategoryType is what macOS reads to decide that this is a game: Game Mode
+    # turns on only for a game (this key) that is full screen and frontmost, and it is the
+    # key Apple's Frameworks Engineer names in the Sonoma Game Mode thread. Without it the
+    # App still runs full screen, but macOS never gives it Game Mode's CPU/GPU priority -
+    # the App this fork replaces (org.nxnative.<id>) declared it, this plist did not.
+    # LSSupportsGameMode is carried along as the upstream nxnative plist has it.
     return dict(CFBundleExecutable='launch', CFBundleIdentifier=identity, CFBundleName=name,
                 CFBundleDisplayName=name, CFBundlePackageType='APPL', CFBundleVersion='1',
                 NSHighResolutionCapable=True, CFBundleShortVersionString=version,
                 NXTitleID=title_id, NXResourceBackend=backend, LSMinimumSystemVersion='26.0',
+                LSApplicationCategoryType='public.app-category.games', LSSupportsGameMode=True,
                 NSRemovableVolumesUsageDescription='Read the selected game folder and store saves and logs in it.')
 
 
@@ -145,6 +152,37 @@ def copy_tree(src, dst):
     result=subprocess.run(['/bin/cp','-cR',str(src),str(dst)])
     if result.returncode:
         shutil.copytree(src,dst)
+
+
+def strip_detritus(app):
+    """The "._name" files a copy from an exFAT volume leaves: codesign reads each one as a
+    code object that is not signed and refuses the whole bundle."""
+    for parent, _, files in os.walk(app):
+        for n in files:
+            if n.startswith('._'):
+                try: (Path(parent) / n).unlink()
+                except OSError: pass
+
+
+def sign(app, identity='-'):
+    """Ad-hoc sign the App: the inner host first, then the bundle, so that Info.plist and
+    every resource are sealed.
+
+    An unsigned build keeps only the signature the linker gave launch and dmhost, which
+    seals no resources and does not bind Info.plist; such an App is not a signed game to
+    LaunchServices, and macOS grants Game Mode only to a game that is signed, full screen
+    and frontmost. With the category key alone the App ran full screen and never entered
+    Game Mode (Touchline23, 2026-11-04); the previous App of this game, and every nxnative
+    App (dm/mac/pack_app.py: sign), carry the bundle signature.
+    """
+    strip_detritus(app)
+    for target in (app / 'Contents/MacOS/dmhost', app):
+        subprocess.run(['codesign', '--force', '--sign', identity, str(target)], check=True)
+    # A .cstemp left inside the bundle by the run is sealed into the next signature, which
+    # then never verifies (a sealed resource that no longer exists).
+    for stale in app.rglob('*.cstemp'):
+        try: stale.unlink()
+        except OSError: pass
 
 
 def audit(app, backend, marker, stamp_dir=None, layer=None):
@@ -274,6 +312,7 @@ def package(a, launcher=None):
         plistlib.dump(plist, f)
     (res/'Readme.txt').write_text(readme(backend, a.title_id))
     audit(a.output, backend, marker, a.shaders.name if stamp.is_file() else None, layer)
+    sign(a.output)   # after audit: the audit refuses a _CodeSignature directory of its own
     return {'backend': backend, 'programs': len(programs), 'shader_files': len(shaders),
             'shader_stamp': stamp.is_file(), 'gfx': layer or 'nvn',
             'romfs_bundled': backend == 'directory', 'addon_content_bundled': bool(aoc), 'containers_or_keys_bundled': False}
