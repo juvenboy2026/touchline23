@@ -41,7 +41,10 @@ IOS_IPA_NAME = 'Touchline23.ipa'
 # assets/app-icon/make_icon.swift draws them (iOS wants an opaque square and
 # rounds it itself; macOS shows a rounded icon with clear corners).
 PROJECT_ICON = ROOT / 'assets/app-icon/touchline23.png'
-PROJECT_MAC_ICON = ROOT / 'assets/app-icon/touchline23-mac.png'
+# The Mac app follows the nxnative convention of showing the game's own icon: fifa23.png is the
+# 256x256 control-data icon nx_extract saves as icon.jpg, upscaled. Falls back to the project artwork.
+GAME_MAC_ICON = ROOT / 'assets/app-icon/fifa23.png'
+PROJECT_MAC_ICON = GAME_MAC_ICON if GAME_MAC_ICON.is_file() else ROOT / 'assets/app-icon/touchline23-mac.png'
 # Game data and private key material must never end up inside an artifact.
 FORBIDDEN = ('.nsp', '.xci', '.nsz', '.ncz', '.xcz', '.nca', '.keys', '.tik')
 
@@ -232,9 +235,14 @@ def extract(args, work):
         raise Failure('--keys <prod.keys> is required to read the game containers')
     out = work / 'extract'
     binary = find_extractor(args, work)
-    say('extracting ExeFS and control data (no RomFS)', Path(args.base).name)
+    bundled = getattr(args, 'resource_backend', 'nsp') == 'directory' and args.target == 'mac'
+    say('extracting ExeFS, control data and the RomFS (bundled App)' if bundled
+        else 'extracting ExeFS and control data (no RomFS)', Path(args.base).name)
     out.mkdir(parents=True, exist_ok=True)
-    argv = [binary, args.keys, args.base, args.update or '-', out, '--program-only']
+    argv = [binary, args.keys, args.base, args.update or '-', out]
+    if not bundled:
+        # External-resource App: never enumerate the multi-gigabyte data section.
+        argv.append('--program-only')
     run(argv, 'nx_extract', env=tool_env())
     exefs = out / 'ExeFS'
     if not exefs.is_dir():
@@ -429,7 +437,8 @@ def launcher_settings(work, patched, nacp, args, environment):
     if nacp is None:
         say('no control.nacp: the launcher will not offer the game languages')
     env = dict(environment, DM_SHOW_FPS='YES' if args.show_fps == 1 else 'NO',
-               DM_LANG=args.language or 'en-US')
+               DM_LANG=args.language or 'en-US',
+               SETTINGS_PLATFORM=args.target)   # mac: the settings window gains Display mode; ios: Picture / Frame-rate counter
     text = run([sys.executable, ROOT / 'dm/games/settings.py', GAME_ID, patched,
                 nacp or Path('/nonexistent/control.nacp'), out], 'dm/games/settings.py', env=env, quiet=True)
     say('launcher settings:', (text or '').strip())
@@ -449,7 +458,7 @@ def app_version(args, nacp):
     return '1.0'
 
 
-def build_mac(args, work, patched, library, nacp, icon, version, bundle):
+def build_mac(args, work, patched, library, nacp, icon, version, bundle, romfs=None):
     need_tools(['swiftc', 'sips', 'codesign'], 'building the macOS App')
     out = Path(args.out) if args.out else ROOT / 'Release' / MAC_APP_NAME
     out = out.resolve()
@@ -459,12 +468,18 @@ def build_mac(args, work, patched, library, nacp, icon, version, bundle):
         say('replacing the previous', out.name)
         shutil.rmtree(out)
     out.parent.mkdir(parents=True, exist_ok=True)
+    backend = getattr(args, 'resource_backend', 'nsp')
     argv = [sys.executable, ROOT / 'scripts/build_mac_app.py',
             '--host', work / 'dmhost', '--patched', patched, '--shaders', library,
             '--profile', work / 'profile' / GAME_ID, '--font', fonts(work, args),
             '--settings', work / 'launcher.json', '--title-id', GAME_ID,
             '--name', args.app_name, '--version', version, '--bundle-id', bundle,
-            '--resource-backend', 'nsp', '--output', out]
+            '--resource-backend', backend, '--output', out]
+    if backend == 'directory':
+        if not romfs:
+            raise Failure('directory mode needs the game RomFS: pass --romfs or let the extract stage write it')
+        say('bundling the game RomFS into the App:', romfs)
+        argv += ['--romfs', str(romfs)]
     if icon:
         argv += ['--icon', str(icon)]
     say('packaging', out.name)
@@ -542,6 +557,12 @@ def parse_args(argv):
     p.add_argument('--version', help="App version (default: the game's display version)")
     p.add_argument('--language', help='default game language (default en-US)')
     p.add_argument('--show-fps', type=int, choices=(0, 1), help='start with the frame-rate counter on')
+    p.add_argument('--resource-backend', choices=('nsp', 'directory'), default='nsp',
+                   help='nsp: the App carries no game data and the launcher asks for the containers at run time; '
+                        'directory: the game RomFS is bundled in the App (Contents/Resources/romfs) and the '
+                        'launcher asks for nothing')
+    p.add_argument('--romfs', type=Path,
+                   help='directory mode: an already extracted RomFS to bundle (skips extracting it again)')
     p.add_argument('--icon', type=Path, help='App icon (default assets/app-icon/touchline23.png)')
     p.add_argument('--standard-font', type=Path, help='Unicode TTF stand-in for the system font')
     p.add_argument('--font-python', default=sys.executable,
@@ -567,6 +588,18 @@ def main(argv=None):
     # (App name, version, languages); a reuse of both may go without it.
     exefs = extract(args, work) if (args.exefs or args.base) else None
     patched = rewrite(args, exefs, work, g)
+
+    # A bundled App reads the game from Contents/Resources/romfs: the launcher asks for nothing.
+    romfs = None
+    if args.target == 'mac' and args.resource_backend == 'directory':
+        romfs = (args.romfs or (work / 'extract' / 'RomFS')).resolve()
+        marker = g.get('romfs_marker')
+        if not romfs.is_dir():
+            raise Failure('directory mode needs the game RomFS, but %s does not exist: drop --exefs so the '
+                          'extract stage writes it, or pass --romfs <extracted RomFS>' % romfs)
+        if marker and not (romfs / marker).is_file():
+            raise Failure('%s is not this game\'s RomFS (missing %s)' % (romfs, marker))
+        say('resource backend: directory - the App carries the game data (%s)' % romfs)
 
     # Shader libraries
     profile_dir = copy_profile_tables(work, g)
@@ -598,7 +631,7 @@ def main(argv=None):
     bundle = bundle_id(g)
 
     if args.target == 'mac':
-        out = build_mac(args, work, patched, mac_library, nacp, icon, version, bundle)
+        out = build_mac(args, work, patched, mac_library, nacp, icon, version, bundle, romfs)
     else:
         out = build_ios(args, work, patched, ios_library, nacp, icon, version, bundle)
     if not out.exists():
